@@ -1,7 +1,7 @@
 export class ModelStartGame {
 	constructor() {}
 
-	loadGameFromLS() {
+	getSaveGameFromLS() {
 		return JSON.parse(localStorage.getItem('history'));
 	}
 

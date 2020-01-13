@@ -11,6 +11,7 @@ const dom = {
 
 let firstCheckKing = false;
 
+// ToDo: ????????????
 export const tempFigure = {
 	firstSelectedFigure: null, // временная переменная где хранится выбраная первая фигура
 	secondSelectedFigure: null // временная переменная где хранится вторая фигура, если первая уже выбрана
@@ -19,6 +20,7 @@ export let arrFigures = [];
 export let historyMove = [];
 
 // очищаем все ячейки от классов 'figureMove' и 'figureKill' и обнуляем временные переменные tempFigure.firstSelectedFigure и tempFigure.secondSelectedFigure
+// ToDo: ????????????
 export function clearBoard(onlyMoves = false) {
 	if (onlyMoves) {
 		[...dom.board.rows].forEach((row) =>
@@ -270,6 +272,7 @@ class MoveFigure {
 		this.color = color;
 		historyMove.push(this);
 	}
+
 	click() {
 		this.arrFiguresPosition.forEach((el) => {
 			if (el.objFigure.parent != el.parent) {
@@ -290,6 +293,7 @@ class MoveFigure {
 		firstCheckKing = checkToTheKing().status;
 		clearBoard();
 	}
+
 	addToList(firstFigure, previousPos, secondFigure, swap) {
 		const symbol = 'abcdefgh'.split(''),
 			number = '87654321'.split(''),
@@ -328,6 +332,7 @@ class MoveFigure {
 		dom.scrollList.scrollTop = dom.scrollList.scrollHeight;
 		this.saveHistoryToLocalStorage(this.arrFiguresPosition, saveMove);
 	}
+
 	saveFigurePosition(allFigures) {
 		return allFigures.map((el) => {
 			let figureData = {
@@ -362,203 +367,5 @@ class MoveFigure {
 }
 
 // ---------------------Start-------------------------------
-
-function startGame() {
-	const mainModal = document.createElement('div'),
-		modalForm = document.createElement('div'),
-		question = document.createElement('p'),
-		contBtn = document.createElement('div'),
-		btnLoad = document.createElement('button'),
-		btnNew = document.createElement('button');
-
-	// Add classList
-	mainModal.classList.add('modal_window');
-	modalForm.classList.add('q_form');
-	question.classList.add('question');
-	contBtn.classList.add('container_btn');
-	btnLoad.classList.add('btn_Load');
-	btnNew.classList.add('btn_New');
-
-	// Add content
-	question.innerText = `Вы хотите начать новую игру или продолжить предыдущую?`;
-	btnLoad.innerText = `Продолжить`;
-	btnNew.innerText = `Начать новую`;
-
-	contBtn.append(btnNew, btnLoad);
-	modalForm.append(question, contBtn);
-	mainModal.append(modalForm);
-	document.querySelector('body').prepend(mainModal);
-
-	// Listeners
-	btnNew.addEventListener('click', newGame);
-	btnLoad.addEventListener('click', loadGame);
-
-	function closeModalWnd() {
-		btnNew.removeEventListener('click', newGame);
-		btnLoad.removeEventListener('click', loadGame);
-		mainModal.remove();
-	}
-
-	function newGame() {
-		[...dom.board.rows].forEach((row, i) => {
-			[...row.children].forEach((col, j) => {
-				// Black figures
-				if ((i == 1 && j == 1) || (i == 1 && j == 8)) {
-					let figure = new Tower();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'tower_black';
-				} else if ((i == 1 && j == 2) || (i == 1 && j == 7)) {
-					let figure = new Horse();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'horse_black';
-				} else if ((i == 1 && j == 3) || (i == 1 && j == 6)) {
-					let figure = new Elephant();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'elephant_black';
-				} else if (i == 1 && j == 4) {
-					let figure = new Queen();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'queen_black';
-				} else if (i == 1 && j == 5) {
-					let figure = new King();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'king_black';
-				} else if (i == 2 && j > 0 && j < 9) {
-					let figure = new Pawn();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'pawn_black';
-				}
-				// White figures
-				if ((i == 8 && j == 1) || (i == 8 && j == 8)) {
-					let figure = new Tower();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'tower_white';
-				} else if ((i == 8 && j == 2) || (i == 8 && j == 7)) {
-					let figure = new Horse();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'horse_white';
-				} else if ((i == 8 && j == 3) || (i == 8 && j == 6)) {
-					let figure = new Elephant();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'elephant_white';
-				} else if (i == 8 && j == 4) {
-					let figure = new Queen();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'queen_white';
-				} else if (i == 8 && j == 5) {
-					let figure = new King();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'king_white';
-				} else if (i == 7 && j > 0 && j < 9) {
-					let figure = new Pawn();
-					figure.add(col, { x: j, y: i });
-					figure.addClass = 'pawn_white';
-				}
-			});
-		});
-		closeModalWnd();
-	}
-
-	function loadGame() {
-		let historyFromLS = JSON.parse(localStorage.getItem('history'));
-		if (historyFromLS) {
-			historyFromLS.arrFigures.forEach((el) => {
-				let figure;
-				switch (el.figure) {
-					case 'Tower':
-						figure = new Tower();
-						placeFigure(figure, el);
-						break;
-					case 'Horse':
-						figure = new Horse();
-						placeFigure(figure, el);
-						break;
-					case 'Elephant':
-						figure = new Elephant();
-						placeFigure(figure, el);
-						break;
-					case 'Queen':
-						figure = new Queen();
-						placeFigure(figure, el);
-						break;
-					case 'King':
-						figure = new King();
-						placeFigure(figure, el);
-						break;
-					case 'Pawn':
-						figure = new Pawn();
-						placeFigure(figure, el);
-						break;
-
-					default:
-						break;
-				}
-			});
-			closeModalWnd();
-			addLastMove();
-		} else {
-			newGame();
-			alert('Нет сохраненной партии!');
-		}
-
-		function placeFigure(figure, el) {
-			figure.addClass =
-				el.color == 'black'
-					? el.figure.toLowerCase() + '_black'
-					: el.figure.toLowerCase() + '_white';
-			if (el.out) {
-				el.color == 'black'
-					? figure.add(dom.blackOut, el.pos)
-					: figure.add(dom.whiteOut, el.pos);
-				figure.addClass = 'figures_out';
-			} else {
-				figure.add(arrTableCells[el.pos.y][el.pos.x], el.pos);
-			}
-		}
-
-		function addLastMove() {
-			let firstFigure = null,
-				secondFigure = null;
-			const swap = historyFromLS.lastMove.swap;
-
-			if (swap) {
-				firstFigure = arrFigures.find(
-					(el) =>
-						el.color == historyFromLS.lastMove.firstFigure.color &&
-						el.constructor.name ==
-							historyFromLS.lastMove.firstFigure.figureName &&
-						el.figure.classList.contains('figures_out')
-				);
-				secondFigure = arrFigures.find(
-					(el) =>
-						el.pos.x == historyFromLS.lastMove.firstFigure.previousPos.x &&
-						el.pos.y == historyFromLS.lastMove.firstFigure.previousPos.y
-				);
-			} else {
-				firstFigure = arrFigures.find(
-					(el) =>
-						el.pos.x == historyFromLS.lastMove.firstFigure.nextPos.x &&
-						el.pos.y == historyFromLS.lastMove.firstFigure.nextPos.y
-				);
-				if (historyFromLS.lastMove.secondFigure.figureName) {
-					secondFigure = arrFigures.find(
-						(el) =>
-							el.color == historyFromLS.lastMove.secondFigure.color &&
-							el.constructor.name ==
-								historyFromLS.lastMove.secondFigure.figureName &&
-							el.figure.classList.contains('figures_out')
-					);
-				}
-			}
-
-			keepMoveInStory(
-				firstFigure,
-				historyFromLS.lastMove.firstFigure.previousPos,
-				secondFigure,
-				swap
-			);
-		}
-	}
-}
 
 const newGame = new ControllerStartGame();

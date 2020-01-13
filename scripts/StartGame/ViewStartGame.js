@@ -149,6 +149,7 @@ export class ViewStartGame {
 		}
 	}
 
+	// ToDo: ????????????
 	placeFigure(figure, el) {
 		figure.addClass =
 			el.color == 'black'

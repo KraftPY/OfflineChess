@@ -96,6 +96,7 @@ class ChessFigure {
 	}
 }
 
+// ToDo: ????????????
 export class King extends ChessFigure {
 	moves() {
 		let arrMoveCells = [];

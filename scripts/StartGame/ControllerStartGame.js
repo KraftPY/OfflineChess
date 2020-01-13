@@ -19,7 +19,7 @@ export class ControllerStartGame {
 	}
 
 	loadGame() {
-		const saveGame = this.model.loadGameFromLS();
+		const saveGame = this.model.getSaveGameFromLS();
 		const isSaveGame = this.view.loadGame(this.allClassesFigures, saveGame);
 		if (isSaveGame) {
 			this.view.closeModalWnd();
