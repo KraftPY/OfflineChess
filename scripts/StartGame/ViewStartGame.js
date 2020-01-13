@@ -114,94 +114,53 @@ export class ViewStartGame {
 				switch (el.figure) {
 					case 'Tower':
 						const tower = new Tower();
-						placeFigure(tower, el);
+						this.placeFigure(tower, el);
 						break;
 					case 'Horse':
 						const horse = new Horse();
-						placeFigure(horse, el);
+						this.placeFigure(horse, el);
 						break;
 					case 'Elephant':
 						const elephant = new Elephant();
-						placeFigure(elephant, el);
+						this.placeFigure(elephant, el);
 						break;
 					case 'Queen':
 						const queen = new Queen();
-						placeFigure(queen, el);
+						this.placeFigure(queen, el);
 						break;
 					case 'King':
 						const king = new King();
-						placeFigure(king, el);
+						this.placeFigure(king, el);
 						break;
 					case 'Pawn':
 						const pawn = new Pawn();
-						placeFigure(pawn, el);
+						this.placeFigure(pawn, el);
 						break;
 
 					default:
 						break;
 				}
 			});
-			addLastMove();
+			return true;
 		} else {
-			newGame();
+			// ToDo: сделать что-то вменяемое!
 			alert('Нет сохраненной партии!');
+			return false;
 		}
+	}
 
-		function placeFigure(figure, el) {
-			figure.addClass =
-				el.color == 'black'
-					? el.figure.toLowerCase() + '_black'
-					: el.figure.toLowerCase() + '_white';
-			if (el.out) {
-				el.color == 'black'
-					? figure.add(this.dom.blackOut, el.pos)
-					: figure.add(this.dom.whiteOut, el.pos);
-				figure.addClass = 'figures_out';
-			} else {
-				figure.add(this.arrTableCells[el.pos.y][el.pos.x], el.pos);
-			}
-		}
-
-		function addLastMove() {
-			let firstFigure = null,
-				secondFigure = null;
-			const swap = saveGame.lastMove.swap;
-
-			if (swap) {
-				firstFigure = arrFigures.find(
-					(el) =>
-						el.color == saveGame.lastMove.firstFigure.color &&
-						el.constructor.name == saveGame.lastMove.firstFigure.figureName &&
-						el.figure.classList.contains('figures_out')
-				);
-				secondFigure = arrFigures.find(
-					(el) =>
-						el.pos.x == saveGame.lastMove.firstFigure.previousPos.x &&
-						el.pos.y == saveGame.lastMove.firstFigure.previousPos.y
-				);
-			} else {
-				firstFigure = arrFigures.find(
-					(el) =>
-						el.pos.x == saveGame.lastMove.firstFigure.nextPos.x &&
-						el.pos.y == saveGame.lastMove.firstFigure.nextPos.y
-				);
-				if (saveGame.lastMove.secondFigure.figureName) {
-					secondFigure = arrFigures.find(
-						(el) =>
-							el.color == saveGame.lastMove.secondFigure.color &&
-							el.constructor.name ==
-								saveGame.lastMove.secondFigure.figureName &&
-							el.figure.classList.contains('figures_out')
-					);
-				}
-			}
-
-			// keepMoveInStory(
-			// 	firstFigure,
-			// 	saveGame.lastMove.firstFigure.previousPos,
-			// 	secondFigure,
-			// 	swap
-			// );
+	placeFigure(figure, el) {
+		figure.addClass =
+			el.color == 'black'
+				? el.figure.toLowerCase() + '_black'
+				: el.figure.toLowerCase() + '_white';
+		if (el.out) {
+			el.color == 'black'
+				? figure.add(this.dom.blackOut, el.pos)
+				: figure.add(this.dom.whiteOut, el.pos);
+			figure.addClass = 'figures_out';
+		} else {
+			figure.add(this.arrTableCells[el.pos.y][el.pos.x], el.pos);
 		}
 	}
 

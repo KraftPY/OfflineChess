@@ -213,7 +213,7 @@ dom.board.addEventListener('click', (ev) => {
 	}
 });
 
-function keepMoveInStory(
+export function keepMoveInStory(
 	firstFigure,
 	previousPos,
 	secondFigure = null,
