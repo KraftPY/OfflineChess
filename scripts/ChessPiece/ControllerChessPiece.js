@@ -1,11 +1,16 @@
-import { arrFigures, historyMove, tempFigure, clearBoard } from '../main.js';
+import {
+	arrFigures,
+	historyMove,
+	tempFigure,
+	clearChessBoard
+} from '../main.js';
 
-class ChessFigure {
+class ChessPiece {
 	constructor() {
 		this.figure = document.createElement('div');
 		this.figure.addEventListener('click', () => this.click());
-		this.board = document.querySelector('.board');
-		this.arrTableCells = [...this.board.rows].map((row) =>
+		this.chessBoard = document.querySelector('.chessBoard');
+		this.arrTableCells = [...this.chessBoard.rows].map((row) =>
 			[...row.children].map((col) => col)
 		);
 		arrFigures.push(this);
@@ -44,7 +49,7 @@ class ChessFigure {
 		) {
 			if (tempFigure.firstSelectedFigure) {
 				if (tempFigure.firstSelectedFigure.color == this.color) {
-					clearBoard();
+					clearChessBoard();
 					tempFigure.firstSelectedFigure = this;
 					this.addClass = 'choosed';
 					this.moves();
@@ -62,7 +67,7 @@ class ChessFigure {
 			}
 		} else if (tempFigure.firstSelectedFigure == this) {
 			this.removeClass = 'choosed';
-			clearBoard();
+			clearChessBoard();
 		} else if (this.figure.classList.contains('figures_choose')) {
 			this.parent.childNodes.forEach((el) => el.classList.remove('choosed'));
 			this.addClass = 'choosed';
@@ -97,7 +102,7 @@ class ChessFigure {
 }
 
 // ToDo: ????????????
-export class King extends ChessFigure {
+export class King extends ChessPiece {
 	moves() {
 		let arrMoveCells = [];
 
@@ -144,7 +149,7 @@ export class King extends ChessFigure {
 	}
 }
 
-export class Queen extends ChessFigure {
+export class Queen extends ChessPiece {
 	moves() {
 		let arrMoveCells = [],
 			diffNum = null;
@@ -253,7 +258,7 @@ export class Queen extends ChessFigure {
 	}
 }
 
-export class Elephant extends ChessFigure {
+export class Bishop extends ChessPiece {
 	moves() {
 		let arrMoveCells = [],
 			diffNum = null;
@@ -321,7 +326,7 @@ export class Elephant extends ChessFigure {
 	}
 }
 
-export class Horse extends ChessFigure {
+export class Knight extends ChessPiece {
 	moves() {
 		let arrMoveCells = [];
 
@@ -373,7 +378,7 @@ export class Horse extends ChessFigure {
 	}
 }
 
-export class Tower extends ChessFigure {
+export class Rook extends ChessPiece {
 	moves() {
 		let arrMoveCells = [];
 
@@ -421,7 +426,7 @@ export class Tower extends ChessFigure {
 	}
 }
 
-export class Pawn extends ChessFigure {
+export class Pawn extends ChessPiece {
 	moves() {
 		let arrMoveCells = [],
 			arrKillCells = []; // pos = {x: j, y: i});

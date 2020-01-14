@@ -1,69 +1,47 @@
 export class ViewStartGame {
 	constructor() {
 		this.dom = {
-			board: document.querySelector('.board'),
+			chessBoard: document.querySelector('.chessBoard'),
 			body: document.querySelector('body'),
 			blackOut: document.querySelector('.black_out'),
 			whiteOut: document.querySelector('.white_out')
 		};
-		this.arrTableCells = [...this.dom.board.rows].map((row) =>
+		this.arrTableCells = [...this.dom.chessBoard.rows].map((row) =>
 			[...row.children].map((col) => col)
 		);
 	}
 
-	creatModalWnd(newGame, loadGame) {
-		this.ModalDOM = {
-			mainModal: document.createElement('div'),
-			modalForm: document.createElement('div'),
-			question: document.createElement('p'),
-			contBtn: document.createElement('div'),
-			btnLoad: document.createElement('button'),
-			btnNew: document.createElement('button')
-		};
+	creatModalWnd(modalWnd, newGame, loadGame) {
+		this.mainModal = document.createElement('div');
+		this.mainModal.classList.add('modal_window');
+		this.mainModal.innerHTML = modalWnd;
+		this.dom.body.prepend(this.mainModal);
 
-		// Add classList
-		this.ModalDOM.mainModal.classList.add('modal_window');
-		this.ModalDOM.modalForm.classList.add('q_form');
-		this.ModalDOM.question.classList.add('question');
-		this.ModalDOM.contBtn.classList.add('container_btn');
-		this.ModalDOM.btnLoad.classList.add('btn_Load');
-		this.ModalDOM.btnNew.classList.add('btn_New');
-
-		// Add content
-		this.ModalDOM.question.innerText = `Вы хотите начать новую игру или продолжить предыдущую?`;
-		this.ModalDOM.btnLoad.innerText = `Продолжить`;
-		this.ModalDOM.btnNew.innerText = `Начать новую`;
-
-		this.ModalDOM.contBtn.append(this.ModalDOM.btnNew, this.ModalDOM.btnLoad);
-		this.ModalDOM.modalForm.append(
-			this.ModalDOM.question,
-			this.ModalDOM.contBtn
-		);
-		this.ModalDOM.mainModal.append(this.ModalDOM.modalForm);
-		this.dom.body.prepend(this.ModalDOM.mainModal);
+		this.btnNew = document.querySelector('.btn_new');
+		this.btnLoad = document.querySelector('.btn_load');
 
 		// Listeners
-		this.ModalDOM.btnNew.addEventListener('click', newGame);
-		this.ModalDOM.btnLoad.addEventListener('click', loadGame);
+		this.btnNew.addEventListener('click', newGame);
+		this.btnLoad.addEventListener('click', loadGame);
 	}
 
 	newGame(allClassesFigures) {
-		const { King, Queen, Elephant, Horse, Tower, Pawn } = allClassesFigures;
-		[...this.dom.board.rows].forEach((row, i) => {
+		const { King, Queen, Bishop, Knight, Rook, Pawn } = allClassesFigures;
+		[...this.dom.chessBoard.rows].forEach((row, i) => {
 			[...row.children].forEach((col, j) => {
 				// Black figures
 				if ((i == 1 && j == 1) || (i == 1 && j == 8)) {
-					const tower = new Tower();
-					tower.add(col, { x: j, y: i });
-					tower.addClass = 'tower_black';
+					const rook = new Rook();
+					rook.add(col, { x: j, y: i });
+					rook.addClass = 'rook_black';
 				} else if ((i == 1 && j == 2) || (i == 1 && j == 7)) {
-					const horse = new Horse();
-					horse.add(col, { x: j, y: i });
-					horse.addClass = 'horse_black';
+					const knight = new Knight();
+					knight.add(col, { x: j, y: i });
+					knight.addClass = 'knight_black';
 				} else if ((i == 1 && j == 3) || (i == 1 && j == 6)) {
-					const elephant = new Elephant();
-					elephant.add(col, { x: j, y: i });
-					elephant.addClass = 'elephant_black';
+					const bishop = new Bishop();
+					bishop.add(col, { x: j, y: i });
+					bishop.addClass = 'bishop_black';
 				} else if (i == 1 && j == 4) {
 					const queen = new Queen();
 					queen.add(col, { x: j, y: i });
@@ -79,17 +57,17 @@ export class ViewStartGame {
 				}
 				// White figures
 				if ((i == 8 && j == 1) || (i == 8 && j == 8)) {
-					const tower = new Tower();
-					tower.add(col, { x: j, y: i });
-					tower.addClass = 'tower_white';
+					const rook = new Rook();
+					rook.add(col, { x: j, y: i });
+					rook.addClass = 'rook_white';
 				} else if ((i == 8 && j == 2) || (i == 8 && j == 7)) {
-					const horse = new Horse();
-					horse.add(col, { x: j, y: i });
-					horse.addClass = 'horse_white';
+					const knight = new Knight();
+					knight.add(col, { x: j, y: i });
+					knight.addClass = 'knight_white';
 				} else if ((i == 8 && j == 3) || (i == 8 && j == 6)) {
-					const elephant = new Elephant();
-					elephant.add(col, { x: j, y: i });
-					elephant.addClass = 'elephant_white';
+					const bishop = new Bishop();
+					bishop.add(col, { x: j, y: i });
+					bishop.addClass = 'bishop_white';
 				} else if (i == 8 && j == 4) {
 					const queen = new Queen();
 					queen.add(col, { x: j, y: i });
@@ -108,21 +86,21 @@ export class ViewStartGame {
 	}
 
 	loadGame(allClassesFigures, saveGame) {
-		const { King, Queen, Elephant, Horse, Tower, Pawn } = allClassesFigures;
+		const { King, Queen, Bishop, Knight, Rook, Pawn } = allClassesFigures;
 		if (saveGame) {
 			saveGame.arrFigures.forEach((el) => {
 				switch (el.figure) {
-					case 'Tower':
-						const tower = new Tower();
-						this.placeFigure(tower, el);
+					case 'Rook':
+						const rook = new Rook();
+						this.placeFigure(rook, el);
 						break;
-					case 'Horse':
-						const horse = new Horse();
-						this.placeFigure(horse, el);
+					case 'Knight':
+						const knight = new Knight();
+						this.placeFigure(knight, el);
 						break;
-					case 'Elephant':
-						const elephant = new Elephant();
-						this.placeFigure(elephant, el);
+					case 'Bishop':
+						const bishop = new Bishop();
+						this.placeFigure(bishop, el);
 						break;
 					case 'Queen':
 						const queen = new Queen();
@@ -166,8 +144,8 @@ export class ViewStartGame {
 	}
 
 	closeModalWnd() {
-		this.ModalDOM.btnNew.removeEventListener('click', () => this.newGame());
-		this.ModalDOM.btnLoad.removeEventListener('click', () => this.loadGame());
-		this.ModalDOM.mainModal.remove();
+		this.btnNew.removeEventListener('click', () => this.newGame());
+		this.btnLoad.removeEventListener('click', () => this.loadGame());
+		this.mainModal.remove();
 	}
 }

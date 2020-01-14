@@ -1,16 +1,22 @@
 import { ViewStartGame } from './ViewStartGame.js';
 import { ModelStartGame } from './ModelStartGame.js';
-import * as allClassesFigures from '../ChessFigure/figure.js';
+import * as allClassesFigures from '../ChessPiece/ControllerChessPiece.js';
 import { arrFigures, keepMoveInStory } from '../main.js';
+import { TemplateStartGame } from './TemplateStartGame.js';
 
 export class ControllerStartGame {
 	constructor() {
 		this.model = new ModelStartGame();
 		this.view = new ViewStartGame();
+		this.modalWnd = TemplateStartGame.getModalWnd();
 		this.arrFigures = arrFigures;
 		this.keepMoveInStory = keepMoveInStory;
 		this.allClassesFigures = allClassesFigures;
-		this.view.creatModalWnd(this.newGame.bind(this), this.loadGame.bind(this));
+		this.view.creatModalWnd(
+			this.modalWnd,
+			this.newGame.bind(this),
+			this.loadGame.bind(this)
+		);
 	}
 
 	newGame() {

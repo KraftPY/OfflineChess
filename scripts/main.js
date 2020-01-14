@@ -1,7 +1,7 @@
 import { ControllerStartGame } from './StartGame/ControllerStartGame.js';
 
 const dom = {
-	board: document.querySelector('.board'), // chess board
+	chessBoard: document.querySelector('.chessBoard'), // chess board
 	whiteOut: document.querySelector('.white_out'), // the place where the dead white figure are stored
 	blackOut: document.querySelector('.black_out'), // the place where the dead black figure are stored
 	mainModalSwap: null,
@@ -9,7 +9,7 @@ const dom = {
 	scrollList: document.querySelector('.story_list')
 };
 
-let firstCheckKing = false;
+let firstInCheckKing = false;
 
 // ToDo: ????????????
 export const tempFigure = {
@@ -21,15 +21,15 @@ export let historyMove = [];
 
 // очищаем все ячейки от классов 'figureMove' и 'figureKill' и обнуляем временные переменные tempFigure.firstSelectedFigure и tempFigure.secondSelectedFigure
 // ToDo: ????????????
-export function clearBoard(onlyMoves = false) {
+export function clearChessBoard(onlyMoves = false) {
 	if (onlyMoves) {
-		[...dom.board.rows].forEach((row) =>
+		[...dom.chessBoard.rows].forEach((row) =>
 			[...row.children].forEach((col) =>
 				col.classList.remove('figureMove', 'figureKill')
 			)
 		);
 	} else {
-		[...dom.board.rows].forEach((row) =>
+		[...dom.chessBoard.rows].forEach((row) =>
 			[...row.children].forEach((col) =>
 				col.classList.remove('figureMove', 'figureKill')
 			)
@@ -42,7 +42,7 @@ export function clearBoard(onlyMoves = false) {
 	}
 }
 
-function pawnEndBoard() {
+function pawnPromotion() {
 	if (
 		tempFigure.firstSelectedFigure.color == 'black' &&
 		dom.blackOut.children.length
@@ -105,21 +105,22 @@ function swapFigure() {
 	swapOutVsChoose(tempFigure.secondSelectedFigure.color, false);
 	dom.mainModalSwap.remove();
 	dom.mainModalSwap = null;
-	firstCheckKing = checkToTheKing().status;
+	firstInCheckKing = inCheck().status;
 	keepMoveInStory(
 		tempFigure.firstSelectedFigure,
 		previousPos,
 		tempFigure.secondSelectedFigure,
 		true
 	);
-	clearBoard();
+	clearChessBoard();
 }
 
 // document.addEventListener('DOMContentLoaded', startGame);
 document.addEventListener('keydown', (ev) =>
-	ev.code == 'Escape' ? clearBoard() : false
+	ev.code == 'Escape' ? clearChessBoard() : false
 );
-dom.board.addEventListener('click', (ev) => {
+
+dom.chessBoard.addEventListener('click', (ev) => {
 	// ход в пустую ячейку
 	if (ev.target.tagName == 'TD' && tempFigure.firstSelectedFigure) {
 		// если ячейка с классом figureMove (этим классом помечены ячейки куда фигура может ходить)
@@ -132,9 +133,9 @@ dom.board.addEventListener('click', (ev) => {
 			});
 
 			// (если шах королю и после хода фигуры шах не пропал) или (после хода фигуры шах королю и фигура одного цвета с королем)
-			let checkKing = checkToTheKing();
+			let checkKing = inCheck();
 			if (
-				(firstCheckKing && checkKing.status) ||
+				(firstInCheckKing && checkKing.status) ||
 				(checkKing.status &&
 					tempFigure.firstSelectedFigure.color == checkKing.king.color)
 			) {
@@ -149,11 +150,11 @@ dom.board.addEventListener('click', (ev) => {
 				(tempFigure.firstSelectedFigure.pos.y == 1 ||
 					tempFigure.firstSelectedFigure.pos.y == 8)
 			) {
-				pawnEndBoard(tempFigure.firstSelectedFigure);
+				pawnPromotion(tempFigure.firstSelectedFigure);
 			}
 		}
-		firstCheckKing = checkToTheKing().status;
-		clearBoard();
+		firstInCheckKing = inCheck().status;
+		clearChessBoard();
 
 		// ход в ячейку где есть фигура
 	} else if (
@@ -184,9 +185,9 @@ dom.board.addEventListener('click', (ev) => {
 			});
 
 			// (если шах королю и после хода фигуры шах не пропал) или (после хода фигуры шах королю и фигура одного цвета с королем)
-			let checkKing = checkToTheKing();
+			let checkKing = inCheck();
 			if (
-				(firstCheckKing && checkKing.status) ||
+				(firstInCheckKing && checkKing.status) ||
 				(checkKing.status &&
 					tempFigure.firstSelectedFigure.color == checkKing.king.color)
 			) {
@@ -207,11 +208,11 @@ dom.board.addEventListener('click', (ev) => {
 				(tempFigure.firstSelectedFigure.pos.y == 1 ||
 					tempFigure.firstSelectedFigure.pos.y == 8)
 			) {
-				pawnEndBoard();
+				pawnPromotion();
 			}
 		}
-		firstCheckKing = checkToTheKing().status;
-		clearBoard();
+		firstInCheckKing = inCheck().status;
+		clearChessBoard();
 	}
 });
 
@@ -232,7 +233,7 @@ export function keepMoveInStory(
 	moveFigure.addToList(firstFigure, previousPos, secondFigure, swap);
 }
 
-function checkToTheKing() {
+function inCheck() {
 	const whiteKing = arrFigures.find(
 			(el) => el.color != 'white' && el.constructor.name == 'King'
 		),
@@ -241,24 +242,24 @@ function checkToTheKing() {
 		),
 		checkKing = { status: false, king: null };
 
-	clearBoard(true);
+	clearChessBoard(true);
 	arrFigures.forEach((el) => {
 		el.moves();
 		if (whiteKing.parent.classList.contains('figureKill')) {
 			checkKing.status = true;
 			checkKing.king = whiteKing;
-			blinkingKing(whiteKing.parent);
+			kingIsBlinking(whiteKing.parent);
 		} else if (blackKing.parent.classList.contains('figureKill')) {
 			checkKing.status = true;
 			checkKing.king = blackKing;
-			blinkingKing(blackKing.parent);
+			kingIsBlinking(blackKing.parent);
 		}
 	});
-	clearBoard(true);
+	clearChessBoard(true);
 	return checkKing;
 }
 
-function blinkingKing(cell) {
+function kingIsBlinking(cell) {
 	cell.classList.add('blinking');
 	setTimeout(() => cell.classList.remove('blinking'), 2000);
 }
@@ -290,8 +291,8 @@ class MoveFigure {
 			}
 			if (el == this) findEl = true;
 		});
-		firstCheckKing = checkToTheKing().status;
-		clearBoard();
+		firstInCheckKing = inCheck().status;
+		clearChessBoard();
 	}
 
 	addToList(firstFigure, previousPos, secondFigure, swap) {
