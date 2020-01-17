@@ -178,13 +178,13 @@ th {
 /* Swap modal windows */
 .choose_out {
 	display: flex;
-	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
 	background-color: #f6c491;
 	border: 2px solid #b5663b;
-	min-height: 102px;
-	max-height: 302px;
-	max-width: 604px;
-	margin: 100px 0px 0 50px;
+	height: 110px;
+	width: 450px;
+	margin: 100px 0px 0 125px;
 }
 
 .ok {

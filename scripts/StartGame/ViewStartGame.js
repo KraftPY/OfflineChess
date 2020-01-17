@@ -1,3 +1,5 @@
+import { TemplateStartGame } from './TemplateStartGame.js'; // ToDo: здесь или во Вьюхе????
+
 export class ViewStartGame {
 	constructor() {
 		this.dom = {
@@ -9,12 +11,13 @@ export class ViewStartGame {
 		this.arrTableCells = [...this.dom.chessBoard.rows].map((row) =>
 			[...row.children].map((col) => col)
 		);
+		this.modalWnd = TemplateStartGame.getModalWnd();
 	}
 
-	creatModalWnd(modalWnd, newGame, loadGame) {
+	creatModalWnd(newGame, loadGame) {
 		this.mainModal = document.createElement('div');
 		this.mainModal.classList.add('modal_window');
-		this.mainModal.innerHTML = modalWnd;
+		this.mainModal.innerHTML = this.modalWnd;
 		this.dom.body.prepend(this.mainModal);
 
 		this.btnNew = document.querySelector('.btn_new');
@@ -31,7 +34,7 @@ export class ViewStartGame {
 			[...row.children].forEach((col, j) => {
 				// Black figures
 				if ((i == 1 && j == 1) || (i == 1 && j == 8)) {
-					const rook = new Rook();
+					const rook = new Rook(); // ToDo: Создание объектов во вьюхе это нормально?
 					rook.add(col, { x: j, y: i });
 					rook.addClass = 'rook_black';
 				} else if ((i == 1 && j == 2) || (i == 1 && j == 7)) {
@@ -127,7 +130,7 @@ export class ViewStartGame {
 		}
 	}
 
-	// ToDo: ????????????
+	// ToDo: Вьюха вызывает свой же метод, норм?
 	placeFigure(figure, el) {
 		figure.addClass =
 			el.color == 'black'

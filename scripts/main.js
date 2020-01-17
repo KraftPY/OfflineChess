@@ -1,4 +1,6 @@
-import { ControllerStartGame } from './StartGame/ControllerStartGame.js';
+import { ControllerStartGame } from './startGame/ControllerStartGame.js';
+import { ControllerPawnPromotion } from './pawnPromotion/ControllerPawnPromotion.js';
+import { PubSub } from './pubSub/PubSub.js';
 
 const dom = {
 	chessBoard: document.querySelector('.chessBoard'), // chess board
@@ -20,7 +22,7 @@ export let arrFigures = [];
 export let historyMove = [];
 
 // очищаем все ячейки от классов 'figureMove' и 'figureKill' и обнуляем временные переменные tempFigure.firstSelectedFigure и tempFigure.secondSelectedFigure
-// ToDo: ????????????
+// ToDo: Экспорт или создать отдельную MVC структуру???
 export function clearChessBoard(onlyMoves = false) {
 	if (onlyMoves) {
 		[...dom.chessBoard.rows].forEach((row) =>
@@ -42,78 +44,78 @@ export function clearChessBoard(onlyMoves = false) {
 	}
 }
 
-function pawnPromotion() {
-	if (
-		tempFigure.firstSelectedFigure.color == 'black' &&
-		dom.blackOut.children.length
-	) {
-		swapOutVsChoose('black');
-	} else if (
-		tempFigure.firstSelectedFigure.color == 'white' &&
-		dom.whiteOut.children.length
-	) {
-		swapOutVsChoose('white');
-	}
-}
+// function pawnPromotion() {
+// 	if (
+// 		tempFigure.firstSelectedFigure.color == 'black' &&
+// 		dom.blackOut.children.length
+// 	) {
+// 		swapOutVsChoose('black');
+// 	} else if (
+// 		tempFigure.firstSelectedFigure.color == 'white' &&
+// 		dom.whiteOut.children.length
+// 	) {
+// 		swapOutVsChoose('white');
+// 	}
+// }
 
-function swapOutVsChoose(color, outToChoose = true) {
-	const parent = color == 'black' ? dom.blackOut : dom.whiteOut;
-	if (outToChoose) {
-		const divChooseFigure = createModalWndSwap();
-		arrFigures.forEach((el) => {
-			if (el.figure.classList.contains('figures_out') && el.color == color) {
-				el.figure.classList.remove('figures_out');
-				el.figure.classList.add('figures_choose');
-				el.add(divChooseFigure);
-			}
-		});
-	} else {
-		arrFigures.forEach((el) => {
-			if (el.figure.classList.contains('figures_choose') && el.color == color) {
-				el.figure.classList.remove('figures_choose');
-				el.figure.classList.add('figures_out');
-				el.add(parent);
-			}
-		});
-	}
-}
+// function swapOutVsChoose(color, outToChoose = true) {
+// 	const parent = color == 'black' ? dom.blackOut : dom.whiteOut;
+// 	if (outToChoose) {
+// 		const divChooseFigure = createModalWndSwap();
+// 		arrFigures.forEach((el) => {
+// 			if (el.figure.classList.contains('figures_out') && el.color == color) {
+// 				el.figure.classList.remove('figures_out');
+// 				el.figure.classList.add('figures_choose');
+// 				el.add(divChooseFigure);
+// 			}
+// 		});
+// 	} else {
+// 		arrFigures.forEach((el) => {
+// 			if (el.figure.classList.contains('figures_choose') && el.color == color) {
+// 				el.figure.classList.remove('figures_choose');
+// 				el.figure.classList.add('figures_out');
+// 				el.add(parent);
+// 			}
+// 		});
+// 	}
+// }
 
-function createModalWndSwap() {
-	const divChooseFigure = document.createElement('div'),
-		btnOK = document.createElement('button');
-	dom.mainModalSwap = document.createElement('div');
+// function createModalWndSwap() {
+// 	const divChooseFigure = document.createElement('div'),
+// 		btnOK = document.createElement('button');
+// 	dom.mainModalSwap = document.createElement('div');
 
-	dom.mainModalSwap.classList.add('modal_window');
-	divChooseFigure.classList.add('choose_out');
-	btnOK.classList.add('ok');
-	btnOK.innerText = 'Select figure';
-	dom.mainModalSwap.append(divChooseFigure, btnOK);
-	document.body.append(dom.mainModalSwap);
-	btnOK.addEventListener('click', () => swapFigure());
-	return divChooseFigure;
-}
+// 	dom.mainModalSwap.classList.add('modal_window');
+// 	divChooseFigure.classList.add('choose_out');
+// 	btnOK.classList.add('ok');
+// 	btnOK.innerText = 'Select figure';
+// 	dom.mainModalSwap.append(divChooseFigure, btnOK);
+// 	document.body.append(dom.mainModalSwap);
+// 	btnOK.addEventListener('click', () => swapFigure());
+// 	return divChooseFigure;
+// }
 
-function swapFigure() {
-	let parent = tempFigure.firstSelectedFigure.parent,
-		previousPos = tempFigure.firstSelectedFigure.pos;
+// function swapFigure() {
+// 	let parent = tempFigure.firstSelectedFigure.parent,
+// 		previousPos = tempFigure.firstSelectedFigure.pos;
 
-	tempFigure.firstSelectedFigure.add(tempFigure.secondSelectedFigure.parent);
-	tempFigure.firstSelectedFigure.addClass = 'figures_choose';
-	tempFigure.secondSelectedFigure.add(parent, previousPos);
-	tempFigure.secondSelectedFigure.removeClass = 'figures_choose';
-	tempFigure.secondSelectedFigure.removeClass = 'choosed';
-	swapOutVsChoose(tempFigure.secondSelectedFigure.color, false);
-	dom.mainModalSwap.remove();
-	dom.mainModalSwap = null;
-	firstInCheckKing = inCheck().status;
-	keepMoveInStory(
-		tempFigure.firstSelectedFigure,
-		previousPos,
-		tempFigure.secondSelectedFigure,
-		true
-	);
-	clearChessBoard();
-}
+// 	tempFigure.firstSelectedFigure.add(tempFigure.secondSelectedFigure.parent);
+// 	tempFigure.firstSelectedFigure.addClass = 'figures_choose';
+// 	tempFigure.secondSelectedFigure.add(parent, previousPos);
+// 	tempFigure.secondSelectedFigure.removeClass = 'figures_choose';
+// 	tempFigure.secondSelectedFigure.removeClass = 'choosed';
+// 	swapOutVsChoose(tempFigure.secondSelectedFigure.color, false);
+// 	dom.mainModalSwap.remove();
+// 	dom.mainModalSwap = null;
+// 	firstInCheckKing = inCheck().status;
+// 	keepMoveInStory(
+// 		tempFigure.firstSelectedFigure,
+// 		previousPos,
+// 		tempFigure.secondSelectedFigure,
+// 		true
+// 	);
+// 	clearChessBoard();
+// }
 
 // document.addEventListener('DOMContentLoaded', startGame);
 document.addEventListener('keydown', (ev) =>
@@ -150,7 +152,8 @@ dom.chessBoard.addEventListener('click', (ev) => {
 				(tempFigure.firstSelectedFigure.pos.y == 1 ||
 					tempFigure.firstSelectedFigure.pos.y == 8)
 			) {
-				pawnPromotion(tempFigure.firstSelectedFigure);
+				publisher.publish('pawnPromotion', tempFigure.firstSelectedFigure.pos);
+				// pawnPromotion(tempFigure.firstSelectedFigure);
 			}
 		}
 		firstInCheckKing = inCheck().status;
@@ -208,7 +211,8 @@ dom.chessBoard.addEventListener('click', (ev) => {
 				(tempFigure.firstSelectedFigure.pos.y == 1 ||
 					tempFigure.firstSelectedFigure.pos.y == 8)
 			) {
-				pawnPromotion();
+				publisher.publish('pawnPromotion', tempFigure.firstSelectedFigure.pos);
+				// pawnPromotion();
 			}
 		}
 		firstInCheckKing = inCheck().status;
@@ -369,4 +373,6 @@ class MoveFigure {
 
 // ---------------------Start-------------------------------
 
+const publisher = new PubSub();
 const newGame = new ControllerStartGame();
+const pawnPromotion = new ControllerPawnPromotion(publisher, arrFigures);

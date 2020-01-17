@@ -101,7 +101,7 @@ class ChessPiece {
 	}
 }
 
-// ToDo: ????????????
+// ToDo: Добавить в один класс или сделать наследование MVC и как сделать тогда наследование??
 export class King extends ChessPiece {
 	moves() {
 		let arrMoveCells = [];
