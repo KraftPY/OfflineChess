@@ -1,6 +1,6 @@
 import { ViewStartGame } from './ViewStartGame.js';
 import { ModelStartGame } from './ModelStartGame.js';
-import * as allClassesFigures from '../chessPiece/ControllerChessPiece.js';
+import * as allClassesFigures from '../chessBoard/ChessFigure.js';
 import { arrFigures, keepMoveInStory } from '../main.js';
 
 export class ControllerStartGame {

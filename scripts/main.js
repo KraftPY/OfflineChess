@@ -1,6 +1,7 @@
 import { ControllerStartGame } from './startGame/ControllerStartGame.js';
-import { ControllerPawnPromotion } from './pawnPromotion/ControllerPawnPromotion.js';
-import { PubSub } from './pubSub/PubSub.js';
+import { ControllerPawnPromotion } from './PawnPromotion/ControllerPawnPromotion.js';
+import { PubSub } from './PubSub/PubSub.js';
+import { ControllerChessBoard } from './ChessBoard/ControllerChessBoard.js';
 
 const dom = {
 	chessBoard: document.querySelector('.chessBoard'), // chess board
@@ -44,181 +45,107 @@ export function clearChessBoard(onlyMoves = false) {
 	}
 }
 
-// function pawnPromotion() {
-// 	if (
-// 		tempFigure.firstSelectedFigure.color == 'black' &&
-// 		dom.blackOut.children.length
-// 	) {
-// 		swapOutVsChoose('black');
-// 	} else if (
-// 		tempFigure.firstSelectedFigure.color == 'white' &&
-// 		dom.whiteOut.children.length
-// 	) {
-// 		swapOutVsChoose('white');
-// 	}
-// }
-
-// function swapOutVsChoose(color, outToChoose = true) {
-// 	const parent = color == 'black' ? dom.blackOut : dom.whiteOut;
-// 	if (outToChoose) {
-// 		const divChooseFigure = createModalWndSwap();
-// 		arrFigures.forEach((el) => {
-// 			if (el.figure.classList.contains('figures_out') && el.color == color) {
-// 				el.figure.classList.remove('figures_out');
-// 				el.figure.classList.add('figures_choose');
-// 				el.add(divChooseFigure);
-// 			}
-// 		});
-// 	} else {
-// 		arrFigures.forEach((el) => {
-// 			if (el.figure.classList.contains('figures_choose') && el.color == color) {
-// 				el.figure.classList.remove('figures_choose');
-// 				el.figure.classList.add('figures_out');
-// 				el.add(parent);
-// 			}
-// 		});
-// 	}
-// }
-
-// function createModalWndSwap() {
-// 	const divChooseFigure = document.createElement('div'),
-// 		btnOK = document.createElement('button');
-// 	dom.mainModalSwap = document.createElement('div');
-
-// 	dom.mainModalSwap.classList.add('modal_window');
-// 	divChooseFigure.classList.add('choose_out');
-// 	btnOK.classList.add('ok');
-// 	btnOK.innerText = 'Select figure';
-// 	dom.mainModalSwap.append(divChooseFigure, btnOK);
-// 	document.body.append(dom.mainModalSwap);
-// 	btnOK.addEventListener('click', () => swapFigure());
-// 	return divChooseFigure;
-// }
-
-// function swapFigure() {
-// 	let parent = tempFigure.firstSelectedFigure.parent,
-// 		previousPos = tempFigure.firstSelectedFigure.pos;
-
-// 	tempFigure.firstSelectedFigure.add(tempFigure.secondSelectedFigure.parent);
-// 	tempFigure.firstSelectedFigure.addClass = 'figures_choose';
-// 	tempFigure.secondSelectedFigure.add(parent, previousPos);
-// 	tempFigure.secondSelectedFigure.removeClass = 'figures_choose';
-// 	tempFigure.secondSelectedFigure.removeClass = 'choosed';
-// 	swapOutVsChoose(tempFigure.secondSelectedFigure.color, false);
-// 	dom.mainModalSwap.remove();
-// 	dom.mainModalSwap = null;
-// 	firstInCheckKing = inCheck().status;
-// 	keepMoveInStory(
-// 		tempFigure.firstSelectedFigure,
-// 		previousPos,
-// 		tempFigure.secondSelectedFigure,
-// 		true
-// 	);
-// 	clearChessBoard();
-// }
-
-// document.addEventListener('DOMContentLoaded', startGame);
 document.addEventListener('keydown', (ev) =>
 	ev.code == 'Escape' ? clearChessBoard() : false
 );
 
-dom.chessBoard.addEventListener('click', (ev) => {
-	// ход в пустую ячейку
-	if (ev.target.tagName == 'TD' && tempFigure.firstSelectedFigure) {
-		// если ячейка с классом figureMove (этим классом помечены ячейки куда фигура может ходить)
-		if (ev.target.classList.contains('figureMove')) {
-			let previousPos = tempFigure.firstSelectedFigure.pos,
-				previousParent = tempFigure.firstSelectedFigure.parent;
-			tempFigure.firstSelectedFigure.add(ev.target, {
-				x: ev.target.cellIndex,
-				y: ev.target.parentElement.rowIndex
-			});
+// dom.chessBoard.addEventListener('click', (ev) => {
+// 	// ход в пустую ячейку
+// 	if (ev.target.tagName == 'TD' && tempFigure.firstSelectedFigure) {
+// 		// если ячейка с классом figureMove (этим классом помечены ячейки куда фигура может ходить)
+// 		if (ev.target.classList.contains('figureMove')) {
+// 			let previousPos = tempFigure.firstSelectedFigure.pos,
+// 				previousParent = tempFigure.firstSelectedFigure.parent;
+// 			tempFigure.firstSelectedFigure.add(ev.target, {
+// 				x: ev.target.cellIndex,
+// 				y: ev.target.parentElement.rowIndex
+// 			});
 
-			// (если шах королю и после хода фигуры шах не пропал) или (после хода фигуры шах королю и фигура одного цвета с королем)
-			let checkKing = inCheck();
-			if (
-				(firstInCheckKing && checkKing.status) ||
-				(checkKing.status &&
-					tempFigure.firstSelectedFigure.color == checkKing.king.color)
-			) {
-				tempFigure.firstSelectedFigure.add(previousParent, previousPos);
-			} else {
-				keepMoveInStory(tempFigure.firstSelectedFigure, previousPos);
-			}
+// 			// (если шах королю и после хода фигуры шах не пропал) или (после хода фигуры шах королю и фигура одного цвета с королем)
+// 			let checkKing = inCheck();
+// 			if (
+// 				(firstInCheckKing && checkKing.status) ||
+// 				(checkKing.status &&
+// 					tempFigure.firstSelectedFigure.color == checkKing.king.color)
+// 			) {
+// 				tempFigure.firstSelectedFigure.add(previousParent, previousPos);
+// 			} else {
+// 				keepMoveInStory(tempFigure.firstSelectedFigure, previousPos);
+// 			}
 
-			// если пешка дошла до конца доски
-			if (
-				tempFigure.firstSelectedFigure.constructor.name == 'Pawn' &&
-				(tempFigure.firstSelectedFigure.pos.y == 1 ||
-					tempFigure.firstSelectedFigure.pos.y == 8)
-			) {
-				publisher.publish('pawnPromotion', tempFigure.firstSelectedFigure.pos);
-				// pawnPromotion(tempFigure.firstSelectedFigure);
-			}
-		}
-		firstInCheckKing = inCheck().status;
-		clearChessBoard();
+// 			// если пешка дошла до конца доски
+// 			if (
+// 				tempFigure.firstSelectedFigure.constructor.name == 'Pawn' &&
+// 				(tempFigure.firstSelectedFigure.pos.y == 1 ||
+// 					tempFigure.firstSelectedFigure.pos.y == 8)
+// 			) {
+// 				publisher.publish('pawnPromotion', tempFigure.firstSelectedFigure.pos);
+// 				// pawnPromotion(tempFigure.firstSelectedFigure);
+// 			}
+// 		}
+// 		firstInCheckKing = inCheck().status;
+// 		clearChessBoard();
 
-		// ход в ячейку где есть фигура
-	} else if (
-		tempFigure.firstSelectedFigure &&
-		tempFigure.secondSelectedFigure &&
-		!(tempFigure.secondSelectedFigure.constructor.name == 'King')
-	) {
-		// если ячейка с классом figureKill (этим классом помечены ячейки куда фигура может ходить и где находится другая фигура)
-		if (
-			tempFigure.secondSelectedFigure.parent.classList.contains('figureKill')
-		) {
-			let parent = tempFigure.secondSelectedFigure.parent,
-				pos = tempFigure.secondSelectedFigure.pos,
-				previousPos = tempFigure.firstSelectedFigure.pos,
-				previousParent = tempFigure.firstSelectedFigure.parent;
-			// если вторая(битая) фигура черного цвета, тогда она перемещается в блок убитых фигур "div.black_out"
-			if (tempFigure.secondSelectedFigure.color == 'black') {
-				tempFigure.secondSelectedFigure.add(dom.blackOut);
-				tempFigure.secondSelectedFigure.addClass = 'figures_out';
-				// если белая, то в блок "div.white_out"
-			} else {
-				tempFigure.secondSelectedFigure.add(dom.whiteOut);
-				tempFigure.secondSelectedFigure.addClass = 'figures_out';
-			}
-			tempFigure.firstSelectedFigure.add(parent, {
-				x: parent.cellIndex,
-				y: parent.parentElement.rowIndex
-			});
+// 		// ход в ячейку где есть фигура
+// 	} else if (
+// 		tempFigure.firstSelectedFigure &&
+// 		tempFigure.secondSelectedFigure &&
+// 		!(tempFigure.secondSelectedFigure.constructor.name == 'King')
+// 	) {
+// 		// если ячейка с классом figureKill (этим классом помечены ячейки куда фигура может ходить и где находится другая фигура)
+// 		if (
+// 			tempFigure.secondSelectedFigure.parent.classList.contains('figureKill')
+// 		) {
+// 			let parent = tempFigure.secondSelectedFigure.parent,
+// 				pos = tempFigure.secondSelectedFigure.pos,
+// 				previousPos = tempFigure.firstSelectedFigure.pos,
+// 				previousParent = tempFigure.firstSelectedFigure.parent;
+// 			// если вторая(битая) фигура черного цвета, тогда она перемещается в блок убитых фигур "div.black_out"
+// 			if (tempFigure.secondSelectedFigure.color == 'black') {
+// 				tempFigure.secondSelectedFigure.add(dom.blackOut);
+// 				tempFigure.secondSelectedFigure.addClass = 'figures_out';
+// 				// если белая, то в блок "div.white_out"
+// 			} else {
+// 				tempFigure.secondSelectedFigure.add(dom.whiteOut);
+// 				tempFigure.secondSelectedFigure.addClass = 'figures_out';
+// 			}
+// 			tempFigure.firstSelectedFigure.add(parent, {
+// 				x: parent.cellIndex,
+// 				y: parent.parentElement.rowIndex
+// 			});
 
-			// (если шах королю и после хода фигуры шах не пропал) или (после хода фигуры шах королю и фигура одного цвета с королем)
-			let checkKing = inCheck();
-			if (
-				(firstInCheckKing && checkKing.status) ||
-				(checkKing.status &&
-					tempFigure.firstSelectedFigure.color == checkKing.king.color)
-			) {
-				tempFigure.firstSelectedFigure.add(previousParent, previousPos);
-				tempFigure.secondSelectedFigure.add(parent, pos);
-				tempFigure.secondSelectedFigure.removeClass = 'figures_out';
-			} else {
-				keepMoveInStory(
-					tempFigure.firstSelectedFigure,
-					previousPos,
-					tempFigure.secondSelectedFigure
-				);
-			}
+// 			// (если шах королю и после хода фигуры шах не пропал) или (после хода фигуры шах королю и фигура одного цвета с королем)
+// 			let checkKing = inCheck();
+// 			if (
+// 				(firstInCheckKing && checkKing.status) ||
+// 				(checkKing.status &&
+// 					tempFigure.firstSelectedFigure.color == checkKing.king.color)
+// 			) {
+// 				tempFigure.firstSelectedFigure.add(previousParent, previousPos);
+// 				tempFigure.secondSelectedFigure.add(parent, pos);
+// 				tempFigure.secondSelectedFigure.removeClass = 'figures_out';
+// 			} else {
+// 				keepMoveInStory(
+// 					tempFigure.firstSelectedFigure,
+// 					previousPos,
+// 					tempFigure.secondSelectedFigure
+// 				);
+// 			}
 
-			// если пешка дошла до конца доски
-			if (
-				tempFigure.firstSelectedFigure.constructor.name == 'Pawn' &&
-				(tempFigure.firstSelectedFigure.pos.y == 1 ||
-					tempFigure.firstSelectedFigure.pos.y == 8)
-			) {
-				publisher.publish('pawnPromotion', tempFigure.firstSelectedFigure.pos);
-				// pawnPromotion();
-			}
-		}
-		firstInCheckKing = inCheck().status;
-		clearChessBoard();
-	}
-});
+// 			// если пешка дошла до конца доски
+// 			if (
+// 				tempFigure.firstSelectedFigure.constructor.name == 'Pawn' &&
+// 				(tempFigure.firstSelectedFigure.pos.y == 1 ||
+// 					tempFigure.firstSelectedFigure.pos.y == 8)
+// 			) {
+// 				publisher.publish('pawnPromotion', tempFigure.firstSelectedFigure.pos);
+// 				// pawnPromotion();
+// 			}
+// 		}
+// 		firstInCheckKing = inCheck().status;
+// 		clearChessBoard();
+// 	}
+// });
 
 export function keepMoveInStory(
 	firstFigure,
@@ -374,5 +301,7 @@ class MoveFigure {
 // ---------------------Start-------------------------------
 
 const publisher = new PubSub();
-const newGame = new ControllerStartGame();
-const pawnPromotion = new ControllerPawnPromotion(publisher, arrFigures);
+// const newGame = new ControllerStartGame();
+// const pawnPromotion = new ControllerPawnPromotion(publisher, arrFigures);
+const chessBoard = new ControllerChessBoard(publisher);
+chessBoard.newGame();
