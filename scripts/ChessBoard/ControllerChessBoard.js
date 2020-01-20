@@ -18,10 +18,6 @@ export class ControllerChessBoard {
 
 	newGame() {
 		this.view.renderNewGame();
-
-		// сразу находим королей, чтоб потом проверяти их на чек
-		this.whiteKing = this.arrChessPieces.find((piece) => piece.id == 'e1');
-		this.blackKing = this.arrChessPieces.find((piece) => piece.id == 'e8');
 	}
 
 	loadGame() {}
@@ -33,9 +29,7 @@ export class ControllerChessBoard {
 			this.view.moveToEmptyCell(this.tempPieces.first, ev.target);
 
 			// Проверка на чек королю
-			if (this.kingIsCheck()) {
-				this.endMove(previousPos);
-			}
+			this.kingIsCheck(previousPos);
 		}
 	}
 
@@ -47,9 +41,7 @@ export class ControllerChessBoard {
 			this.view.takingEnemyChessPiece(this.tempPieces);
 
 			// Проверка на чек королю
-			if (this.kingIsCheck()) {
-				this.endMove(previousPos);
-			}
+			this.kingIsCheck(previousPos);
 		} else if (this.whoseMove == piece.color && this.tempPieces.first != piece) {
 			this.tempPieces.first = piece;
 			let moves = this.getMovesPiece(this.tempPieces.first);
@@ -61,6 +53,61 @@ export class ControllerChessBoard {
 			this.view.clearChessBoard();
 			this.tempPieces.first = null;
 		}
+	}
+
+	kingIsCheck(previousPos) {
+		// фильтруем фигуры которые выбиты с доски
+		const arrPieces = this.arrChessPieces.filter((piece) => !piece.div.classList.contains('figures_out'));
+
+		// находим королей и делим их на король пользователя и король противника
+		const { userKing, enemyKing } = this.getKingsNow();
+
+		// смотрим все возможные ходы всех фигур на шахматной доске
+		arrPieces.forEach((piece) => {
+			let moves = this.getMovesPiece(piece);
+			this.view.showMoves(moves);
+		});
+
+		switch (true) {
+			//	Если до этого не было шаха и после хода король противника попал под шах
+			case !this.isChecked && enemyKing.div.classList.contains('figureKill'):
+				this.view.kingIsBlinking(enemyKing);
+				this.isChecked = true;
+				this.endMove(previousPos);
+				break;
+			//	Если до этого не было шаха и после хода король пользователя попал под шах, отменяем ход
+			case !this.isChecked && userKing.div.classList.contains('figureKill'):
+			//	Если был шах и после хода король пользователя остался под шахом, отменяем ход
+			case this.isChecked && userKing.div.classList.contains('figureKill'):
+				this.moveBack(userKing);
+				break;
+			//	Если был шах и после хода шах пропал
+			case this.isChecked && !userKing.div.classList.contains('figureKill'):
+				this.isChecked = false;
+				this.endMove(previousPos);
+				break;
+
+			default:
+				this.endMove(previousPos);
+				break;
+		}
+
+		this.view.clearChessBoard();
+	}
+
+	moveBack(userKing) {
+		this.view.kingIsBlinking(userKing);
+		let saveGame = this.model.getSaveGame();
+		this.view.cancelMove(saveGame.arrChessPieces);
+		this.tempPieces = { first: null, second: null };
+	}
+
+	getKingsNow() {
+		const kings = {
+			userKing: this.arrChessPieces.find((piece) => piece.color == this.whoseMove && piece.pieceName == 'king'),
+			enemyKing: this.arrChessPieces.find((piece) => piece.color != this.whoseMove && piece.pieceName == 'king')
+		};
+		return kings;
 	}
 
 	endMove(previousPos) {
@@ -76,39 +123,6 @@ export class ControllerChessBoard {
 
 		// Оповещаем что ход сделан
 		this.publisher.publish('moveEnd');
-	}
-
-	kingIsCheck() {
-		let saveMove = true;
-		// фильтруем фигуры которые выбиты с доски
-		const arrPieces = this.arrChessPieces.filter((piece) => !piece.div.classList.contains('figures_out'));
-
-		// смотрим все возможные ходы всех фигур на шахматной доске
-		arrPieces.forEach((piece) => {
-			let moves = this.getMovesPiece(piece);
-			this.view.showMoves(moves);
-		});
-
-		//	Если был шах и после хода он не пропал, отменяем ход
-		if (
-			this.isChecked &&
-			(this.whiteKing.div.classList.contains('figureKill') || this.blackKing.div.classList.contains('figureKill'))
-		) {
-			this.loadGame();
-			saveMove = false;
-			//	Если не было шаха, но после хода он появился
-		} else if (
-			!this.isChecked &&
-			(this.whiteKing.div.classList.contains('figureKill') || this.blackKing.div.classList.contains('figureKill'))
-		) {
-			this.isChecked = true;
-
-			// Если был шах и после хода он пропал
-		} else if (this.isChecked) {
-			this.isChecked = false;
-		}
-		this.view.clearChessBoard();
-		return saveMove;
 	}
 
 	getMovesPiece({ pieceName, pos, color }) {

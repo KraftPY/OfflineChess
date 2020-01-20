@@ -69,6 +69,25 @@ export class ViewChessBoard {
 		this.dom.chessBoard.addEventListener('click', this.clickEmptyCell);
 	}
 
+	renderSaveGame(saveGame) {}
+
+	cancelMove(saveGame) {
+		this.arrChessPieces.forEach((piece) => {
+			const savePiece = saveGame.find((el) => el.id == piece.id);
+			let { x, y } = savePiece.pos;
+			if (piece.pos.x != x || piece.pos.y != y) {
+				if (piece.pos.x == 0 && piece.pos.y == 0) {
+					piece.div.classList.remove('figures_out');
+					piece.div.addEventListener('click', this.clickChessPiece);
+				}
+				this.chessBoardCells[y][x].append(piece.div);
+				piece.pos = savePiece.pos;
+			}
+		});
+	}
+
+	removeAllEvents() {}
+
 	showMoves({ color, arrMoveCells = [], arrKillCells = [] }) {
 		this.chessBoardCells.forEach((row, i) => {
 			row.forEach((col, j) => {
@@ -127,5 +146,11 @@ export class ViewChessBoard {
 
 	selectChessPiece(piece) {
 		piece.div.classList.add('choosed');
+	}
+
+	kingIsBlinking(whiteKing, blackKing) {
+		let king = whiteKing.div.classList.contains('figureKill') ? whiteKing : blackKing;
+		king.div.classList.add('blinking');
+		setTimeout(() => king.div.classList.remove('blinking'), 3000);
 	}
 }
