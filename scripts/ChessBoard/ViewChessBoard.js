@@ -1,7 +1,7 @@
 import { TemplateChessBoard } from './TemplateChessBoard.js';
 
 export class ViewChessBoard {
-	constructor(arrChessPieces, clickChessPiece, clickEmptyCell, pawnPromotion) {
+	constructor(arrChessPieces, clickChessPiece, clickEmptyCell) {
 		this.dom = {
 			chessBoard: document.querySelector('.chessBoard'),
 			blackOut: document.querySelector('.black_out'),
@@ -10,7 +10,6 @@ export class ViewChessBoard {
 		this.arrChessPieces = arrChessPieces;
 		this.clickChessPiece = clickChessPiece;
 		this.clickEmptyCell = clickEmptyCell;
-		this.pawnPromotion = pawnPromotion;
 		this.chessBoardCells = [...this.dom.chessBoard.rows].map((row) => [...row.children].map((col) => col));
 	}
 
@@ -141,13 +140,15 @@ export class ViewChessBoard {
 			});
 		});
 		const btnSelect = document.querySelector('.ok');
-		btnSelect.addEventListener('click', () => {
-			if (pieceName) {
-				this.pawnPromotion(pawn, pieceName);
-				mainModal.remove();
-			} else {
-				alert('Выберите фигуру!');
-			}
+		return new Promise((resolve) => {
+			btnSelect.addEventListener('click', () => {
+				if (pieceName) {
+					mainModal.remove();
+					resolve(pieceName);
+				} else {
+					alert('Выберите фигуру!');
+				}
+			});
 		});
 	}
 

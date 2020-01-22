@@ -7,14 +7,13 @@ export class ControllerChessBoard {
 		this.view = new ViewChessBoard(
 			this.arrChessPieces,
 			this.clickChessPiece.bind(this),
-			this.clickEmptyCell.bind(this),
-			this.pawnPromotion.bind(this)
+			this.clickEmptyCell.bind(this)
 		);
 		this.model = new ModelChessBoard();
 		this.publisher = publisher;
 		this.tempPieces = { first: null, second: null };
 		this.whoseMove = 'white'; // чей сейчас ход. При старте новой игры первыми всегда ходят белые фигуры
-		this.isChecked = false;
+		this.isChecked = false; // Чек королю
 	}
 
 	newGame() {
@@ -31,12 +30,9 @@ export class ControllerChessBoard {
 			this.view.moveToEmptyCell(chessPiece, ev.target);
 
 			// если пешка дошла до конца, то запускаем "обмен пешки"
-			if (chessPiece.pieceName == 'pawn' && (chessPiece.pos.y == 1 || chessPiece.pos.y == 8)) {
-				this.view.renderPawnPromotion(chessPiece);
-			}
-
+			this.pawnPromotion(chessPiece);
 			// проверка пешки на первый ход
-			this.checkPawnFirstMove(chessPiece);
+			this.checkPawnFirstMove(chessPiece); // ToDo: если окажется что был чек королю и ход отменится, то пешке все равно первый ход запишется
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
@@ -60,6 +56,9 @@ export class ControllerChessBoard {
 			let previousPos = { x: this.tempPieces.first.pos.x, y: this.tempPieces.first.pos.y };
 			this.tempPieces.second = chessPiece;
 			this.view.takingEnemyChessPiece(this.tempPieces);
+
+			// // если пешка дошла до конца, то запускаем "обмен пешки"
+			this.pawnPromotion(this.tempPieces.first);
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
@@ -110,6 +109,8 @@ export class ControllerChessBoard {
 			this.view.showEnPassantMove(rightPiece);
 		}
 	}
+
+	// -----------------------------------------------------------------------------------------------------------------
 
 	kingIsCheck(previousPos) {
 		// фильтруем фигуры которые выбиты с доски
@@ -183,9 +184,13 @@ export class ControllerChessBoard {
 		this.publisher.publish('moveEnd');
 	}
 
-	pawnPromotion(pawn, pieceName) {
-		pawn.pieceName = pieceName;
-		pawn.div.className = `${pieceName}_${pawn.color}`;
+	pawnPromotion(chessPiece) {
+		if (!this.isChecked && chessPiece.pieceName == 'pawn' && (chessPiece.pos.y == 1 || chessPiece.pos.y == 8)) {
+			this.view.renderPawnPromotion(chessPiece).then((pieceName) => {
+				chessPiece.pieceName = pieceName;
+				chessPiece.div.className = `${pieceName}_${chessPiece.color}`;
+			});
+		}
 	}
 
 	getMovesPiece({ pieceName, pos, color }) {
