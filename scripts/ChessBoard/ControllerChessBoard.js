@@ -7,7 +7,8 @@ export class ControllerChessBoard {
 		this.view = new ViewChessBoard(
 			this.arrChessPieces,
 			this.clickChessPiece.bind(this),
-			this.clickEmptyCell.bind(this)
+			this.clickEmptyCell.bind(this),
+			this.pawnPromotion.bind(this)
 		);
 		this.model = new ModelChessBoard();
 		this.publisher = publisher;
@@ -26,7 +27,23 @@ export class ControllerChessBoard {
 		// ToDo: Можно ли проверять класс в Контролере???
 		if (ev.target.tagName == 'TD' && this.tempPieces.first && ev.target.classList.contains('figureMove')) {
 			let previousPos = this.tempPieces.first.pos;
-			this.view.moveToEmptyCell(this.tempPieces.first, ev.target);
+			let chessPiece = this.tempPieces.first;
+			this.view.moveToEmptyCell(chessPiece, ev.target);
+
+			// если пешка дошла до конца, то запускаем "обмен пешки"
+			if (chessPiece.pieceName == 'pawn' && (chessPiece.pos.y == 1 || chessPiece.pos.y == 8)) {
+				this.view.renderPawnPromotion(chessPiece);
+			}
+
+			// проверка пешки на первый ход
+			this.checkPawnFirstMove(chessPiece);
+
+			// Проверка на чек королю
+			this.kingIsCheck(previousPos);
+		} else if (ev.target.tagName == 'TD' && this.tempPieces.first && ev.target.classList.contains('figureKill')) {
+			let previousPos = { x: this.tempPieces.first.pos.x, y: this.tempPieces.first.pos.y };
+			this.tempPieces.second = this.arrChessPieces.find((piece) => piece.isEnPassant);
+			this.view.takingEnemyChessPiece(this.tempPieces, true);
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
@@ -34,24 +51,63 @@ export class ControllerChessBoard {
 	}
 
 	clickChessPiece(ev) {
-		let piece = this.arrChessPieces.find((piece) => piece.id == ev.target.dataset.id);
-		if (this.tempPieces.first && this.whoseMove != piece.color && piece.div.classList.contains('figureKill')) {
+		let chessPiece = this.arrChessPieces.find((piece) => piece.id == ev.target.dataset.id);
+		if (
+			this.tempPieces.first &&
+			this.whoseMove != chessPiece.color &&
+			chessPiece.div.classList.contains('figureKill')
+		) {
 			let previousPos = { x: this.tempPieces.first.pos.x, y: this.tempPieces.first.pos.y };
-			this.tempPieces.second = piece;
+			this.tempPieces.second = chessPiece;
 			this.view.takingEnemyChessPiece(this.tempPieces);
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
-		} else if (this.whoseMove == piece.color && this.tempPieces.first != piece) {
-			this.tempPieces.first = piece;
+		} else if (this.whoseMove == chessPiece.color && this.tempPieces.first != chessPiece) {
+			this.tempPieces.first = chessPiece;
 			let moves = this.getMovesPiece(this.tempPieces.first);
-			// очищаем доску от возможных ходов и взятий
 			this.view.clearChessBoard();
-			this.view.selectChessPiece(piece);
+			this.view.selectChessPiece(chessPiece);
 			this.view.showMoves(moves);
-		} else if (this.tempPieces.first == piece) {
-			this.view.clearChessBoard();
-			this.tempPieces.first = null;
+
+			// проверка на "взятие на проходе"
+			this.enPassant(chessPiece);
+		}
+	}
+
+	// --------------------------------------------------- enPassant ------------------------------------------------
+
+	checkPawnFirstMove(chessPiece) {
+		const { pieceName, isEnPassant, pos } = chessPiece;
+		this.arrChessPieces.forEach((piece) => {
+			piece.pieceName == 'pawn' && piece.isEnPassant == true ? (piece.isEnPassant = false) : false;
+		});
+		// если пешка делает свой первый ход через одну клетку, то записываем ей в isEnPassant = true
+		if (pieceName == 'pawn' && isEnPassant == null && (pos.y == 4 || pos.y == 5)) {
+			chessPiece.isEnPassant = true;
+			// если пешка делает свой первый ход на одну клетку или было isEnPassant = true, то записываем ее в isEnPassant = false
+		} else if (pieceName == 'pawn' && (isEnPassant == null || isEnPassant == true)) {
+			chessPiece.isEnPassant = false;
+		}
+	}
+
+	enPassant(chessPiece) {
+		const { pieceName, color, pos } = chessPiece;
+		if (pieceName == 'pawn' && color == 'white' && pos.y == 4) {
+			this.getEnPassantPawn(chessPiece);
+		} else if (pieceName == 'pawn' && color == 'black' && pos.y == 5) {
+			this.getEnPassantPawn(chessPiece);
+		}
+	}
+
+	getEnPassantPawn(chessPiece) {
+		const { pieceName, color, pos } = chessPiece;
+		const leftPiece = this.arrChessPieces.find((piece) => piece.pos.x == pos.x - 1 && piece.pos.y == pos.y);
+		const rightPiece = this.arrChessPieces.find((piece) => piece.pos.x == pos.x + 1 && piece.pos.y == pos.y);
+		if (leftPiece && leftPiece.pieceName == pieceName && leftPiece.color != color && leftPiece.isEnPassant) {
+			this.view.showEnPassantMove(leftPiece);
+		} else if (rightPiece && rightPiece.pieceName == pieceName && rightPiece.color != color && rightPiece.isEnPassant) {
+			this.view.showEnPassantMove(rightPiece);
 		}
 	}
 
@@ -95,6 +151,7 @@ export class ControllerChessBoard {
 		this.view.clearChessBoard();
 	}
 
+	// ToDO: можно внутрь другого метода запихнуть???
 	moveBack(userKing) {
 		this.view.kingIsBlinking(userKing);
 		let saveGame = this.model.getSaveGame();
@@ -102,6 +159,7 @@ export class ControllerChessBoard {
 		this.tempPieces = { first: null, second: null };
 	}
 
+	// ToDO: можно внутрь другого метода запихнуть???
 	getKingsNow() {
 		const kings = {
 			userKing: this.arrChessPieces.find((piece) => piece.color == this.whoseMove && piece.pieceName == 'king'),
@@ -123,6 +181,11 @@ export class ControllerChessBoard {
 
 		// Оповещаем что ход сделан
 		this.publisher.publish('moveEnd');
+	}
+
+	pawnPromotion(pawn, pieceName) {
+		pawn.pieceName = pieceName;
+		pawn.div.className = `${pieceName}_${pawn.color}`;
 	}
 
 	getMovesPiece({ pieceName, pos, color }) {
@@ -422,9 +485,6 @@ export class ControllerChessBoard {
 					else if (pos.x == 8) arrKillCells.push({ y: pos.y + 1, x: pos.x - 1 });
 					else arrKillCells.push({ y: pos.y + 1, x: pos.x - 1 }, { y: pos.y + 1, x: pos.x + 1 });
 				}
-				// arrMovesPawn.length
-				// 	? this.showMoves(arrMovesPawn, arrKillCells)
-				// 	: false;
 				return { color, arrMoveCells: arrMovesPawn, arrKillCells };
 		}
 	}

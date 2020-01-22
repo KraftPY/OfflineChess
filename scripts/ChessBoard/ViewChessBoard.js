@@ -1,5 +1,7 @@
+import { TemplateChessBoard } from './TemplateChessBoard.js';
+
 export class ViewChessBoard {
-	constructor(arrChessPieces, clickChessPiece, clickEmptyCell) {
+	constructor(arrChessPieces, clickChessPiece, clickEmptyCell, pawnPromotion) {
 		this.dom = {
 			chessBoard: document.querySelector('.chessBoard'),
 			blackOut: document.querySelector('.black_out'),
@@ -8,6 +10,7 @@ export class ViewChessBoard {
 		this.arrChessPieces = arrChessPieces;
 		this.clickChessPiece = clickChessPiece;
 		this.clickEmptyCell = clickEmptyCell;
+		this.pawnPromotion = pawnPromotion;
 		this.chessBoardCells = [...this.dom.chessBoard.rows].map((row) => [...row.children].map((col) => col));
 	}
 
@@ -19,7 +22,8 @@ export class ViewChessBoard {
 				div: document.createElement('div'),
 				pos: { x: j, y: i },
 				pieceName: pieceName,
-				color: color
+				color: color,
+				isEnPassant: null
 			};
 		piece.div.setAttribute('data-id', piece.id);
 		piece.div.classList.add(`${pieceName}_${color}`);
@@ -71,12 +75,21 @@ export class ViewChessBoard {
 
 	renderSaveGame(saveGame) {}
 
+	showEnPassantMove(pawn) {
+		const { color, pos } = pawn;
+		if (color == 'white') {
+			this.chessBoardCells[pos.y + 1][pos.x].classList.add('figureKill');
+		} else {
+			this.chessBoardCells[pos.y - 1][pos.x].classList.add('figureKill');
+		}
+	}
+
 	cancelMove(saveGame) {
 		this.arrChessPieces.forEach((piece) => {
 			const savePiece = saveGame.find((el) => el.id == piece.id);
 			let { x, y } = savePiece.pos;
 			if (piece.pos.x != x || piece.pos.y != y) {
-				if (piece.pos.x == 0 && piece.pos.y == 0) {
+				if (!piece.pos.x && !piece.pos.y) {
 					piece.div.classList.remove('figures_out');
 					piece.div.addEventListener('click', this.clickChessPiece);
 				}
@@ -85,8 +98,6 @@ export class ViewChessBoard {
 			}
 		});
 	}
-
-	removeAllEvents() {}
 
 	showMoves({ color, arrMoveCells = [], arrKillCells = [] }) {
 		this.chessBoardCells.forEach((row, i) => {
@@ -114,31 +125,70 @@ export class ViewChessBoard {
 		return this.chessBoardCells[i][j].childElementCount ? false : true;
 	}
 
+	renderPawnPromotion(pawn) {
+		const mainModal = document.createElement('div');
+		mainModal.classList.add('modal_window');
+		mainModal.innerHTML = TemplateChessBoard.getModalWnd(pawn.color);
+		document.body.prepend(mainModal);
+
+		const arrPiece = document.querySelectorAll('.figures_choose');
+		let pieceName = null;
+		arrPiece.forEach((piece) => {
+			piece.addEventListener('click', (ev) => {
+				pieceName = ev.target.dataset.name;
+				arrPiece.forEach((el) => el.classList.remove('choosed'));
+				ev.target.classList.add('choosed');
+			});
+		});
+		const btnSelect = document.querySelector('.ok');
+		btnSelect.addEventListener('click', () => {
+			if (pieceName) {
+				this.pawnPromotion(pawn, pieceName);
+				mainModal.remove();
+			} else {
+				alert('Выберите фигуру!');
+			}
+		});
+	}
+
 	moveToEmptyCell(chessPiece, emptyCell) {
 		emptyCell.append(chessPiece.div);
 		chessPiece.pos = { x: emptyCell.cellIndex, y: emptyCell.parentNode.rowIndex };
 	}
 
-	takingEnemyChessPiece({ first, second }) {
+	takingEnemyChessPiece({ first, second }, enPassant = false) {
 		let { x, y } = second.pos;
 
 		// убираем выбитую фигуру с доски, обнуляем ее координаты и удаляем слушатель с нее
 		second.color == 'white' ? this.dom.whiteOut.append(second.div) : this.dom.blackOut.append(second.div);
-		second.pos.x = 0;
-		second.pos.y = 0;
+		second.pos.x = null;
+		second.pos.y = null;
 		second.div.classList.add('figures_out');
 		second.div.removeEventListener('click', this.clickChessPiece);
 
-		// перемещаем первуб фигура на место выбитой
-		this.chessBoardCells[y][x].append(first.div);
-		first.pos.x = x;
-		first.pos.y = y;
+		// перемещаем первую фигуру на место выбитой
+		if (!enPassant) {
+			this.chessBoardCells[y][x].append(first.div);
+			first.pos.x = x;
+			first.pos.y = y;
+		} else {
+			if (second.color == 'white') {
+				this.chessBoardCells[y + 1][x].append(first.div);
+				first.pos.x = x;
+				first.pos.y = y + 1;
+			} else {
+				this.chessBoardCells[y - 1][x].append(first.div);
+				first.pos.x = x;
+				first.pos.y = y - 1;
+			}
+		}
 	}
 
 	clearChessBoard() {
 		this.chessBoardCells.forEach((row) => {
 			row.forEach((cell) => {
 				cell.classList.remove('figureMove');
+				cell.classList.remove('figureKill');
 			});
 		});
 		this.arrChessPieces.forEach((piece) => piece.div.classList.remove('choosed', 'figureKill'));
