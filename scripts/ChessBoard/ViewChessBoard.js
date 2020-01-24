@@ -22,7 +22,7 @@ export class ViewChessBoard {
 				pos: { x: j, y: i },
 				pieceName: pieceName,
 				color: color,
-				isEnPassant: null
+				isFirstMove: null
 			};
 		piece.div.setAttribute('data-id', piece.id);
 		piece.div.classList.add(`${pieceName}_${color}`);

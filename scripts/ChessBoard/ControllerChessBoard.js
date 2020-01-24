@@ -32,13 +32,13 @@ export class ControllerChessBoard {
 			// если пешка дошла до конца, то запускаем "обмен пешки"
 			this.pawnPromotion(chessPiece);
 			// проверка пешки на первый ход
-			this.checkPawnFirstMove(chessPiece); // ToDo: если окажется что был чек королю и ход отменится, то пешке все равно первый ход запишется
+			this.checkPawnFirstMove(chessPiece);
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
 		} else if (ev.target.tagName == 'TD' && this.tempPieces.first && ev.target.classList.contains('figureKill')) {
 			let previousPos = { x: this.tempPieces.first.pos.x, y: this.tempPieces.first.pos.y };
-			this.tempPieces.second = this.arrChessPieces.find((piece) => piece.isEnPassant);
+			this.tempPieces.second = this.arrChessPieces.find((piece) => piece.isFirstMove);
 			this.view.takingEnemyChessPiece(this.tempPieces, true);
 
 			// Проверка на чек королю
@@ -57,8 +57,15 @@ export class ControllerChessBoard {
 			this.tempPieces.second = chessPiece;
 			this.view.takingEnemyChessPiece(this.tempPieces);
 
-			// // если пешка дошла до конца, то запускаем "обмен пешки"
+			// если пешка дошла до конца, то запускаем "обмен пешки"
 			this.pawnPromotion(this.tempPieces.first);
+
+			// проверка пешки на первый ход и короля с ладьёй
+			this.checkPawnFirstMove(chessPiece);
+			this.checkKingRookFirstMove(chessPiece);
+
+			// проверка на "Рокировку"
+			this.castling(chessPiece.color);
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
@@ -74,19 +81,29 @@ export class ControllerChessBoard {
 		}
 	}
 
+	// --------------------------------------------------- Castling -------------------------------------------------
+	castling(color) {}
+
+	checkKingRookFirstMove(chessPiece) {
+		if (chessPiece.pieceName == 'king' || chessPiece.pieceName == 'rook' || chessPiece.isFirstMove == null) {
+			chessPiece.isFirstMove = true;
+		}
+	}
 	// --------------------------------------------------- enPassant ------------------------------------------------
 
 	checkPawnFirstMove(chessPiece) {
-		const { pieceName, isEnPassant, pos } = chessPiece;
-		this.arrChessPieces.forEach((piece) => {
-			piece.pieceName == 'pawn' && piece.isEnPassant == true ? (piece.isEnPassant = false) : false;
-		});
-		// если пешка делает свой первый ход через одну клетку, то записываем ей в isEnPassant = true
-		if (pieceName == 'pawn' && isEnPassant == null && (pos.y == 4 || pos.y == 5)) {
-			chessPiece.isEnPassant = true;
-			// если пешка делает свой первый ход на одну клетку или было isEnPassant = true, то записываем ее в isEnPassant = false
-		} else if (pieceName == 'pawn' && (isEnPassant == null || isEnPassant == true)) {
-			chessPiece.isEnPassant = false;
+		if (!this.isChecked) {
+			const { pieceName, isFirstMove, pos } = chessPiece;
+			this.arrChessPieces.forEach((piece) => {
+				piece.pieceName == 'pawn' && piece.isFirstMove == true ? (piece.isFirstMove = false) : false;
+			});
+			// если пешка делает свой первый ход через одну клетку, то записываем ей в isFirstMove = true
+			if (pieceName == 'pawn' && isFirstMove == null && (pos.y == 4 || pos.y == 5)) {
+				chessPiece.isFirstMove = true;
+				// если пешка делает свой первый ход на одну клетку или было isFirstMove = true, то записываем ее в isFirstMove = false
+			} else if (pieceName == 'pawn' && (isFirstMove == null || isFirstMove == true)) {
+				chessPiece.isFirstMove = false;
+			}
 		}
 	}
 
@@ -103,9 +120,9 @@ export class ControllerChessBoard {
 		const { pieceName, color, pos } = chessPiece;
 		const leftPiece = this.arrChessPieces.find((piece) => piece.pos.x == pos.x - 1 && piece.pos.y == pos.y);
 		const rightPiece = this.arrChessPieces.find((piece) => piece.pos.x == pos.x + 1 && piece.pos.y == pos.y);
-		if (leftPiece && leftPiece.pieceName == pieceName && leftPiece.color != color && leftPiece.isEnPassant) {
+		if (leftPiece && leftPiece.pieceName == pieceName && leftPiece.color != color && leftPiece.isFirstMove) {
 			this.view.showEnPassantMove(leftPiece);
-		} else if (rightPiece && rightPiece.pieceName == pieceName && rightPiece.color != color && rightPiece.isEnPassant) {
+		} else if (rightPiece && rightPiece.pieceName == pieceName && rightPiece.color != color && rightPiece.isFirstMove) {
 			this.view.showEnPassantMove(rightPiece);
 		}
 	}
