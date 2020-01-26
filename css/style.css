@@ -131,11 +131,10 @@ th {
 .choosed {
 	box-shadow: 0 0 0 2px rgb(180, 255, 4) inset, 0 0 0 4px rgb(76, 247, 70) inset;
 }
-.figureMove {
-	box-shadow: 0 0 0 2px rgb(216, 218, 214) inset,
-		0 0 0 4px rgb(126, 126, 126) inset;
+.figure_move {
+	box-shadow: 0 0 0 2px rgb(216, 218, 214) inset, 0 0 0 4px rgb(126, 126, 126) inset;
 }
-.figureKill {
+.figure_kill {
 	box-shadow: 0 0 0 2px rgb(250, 78, 78) inset, 0 0 0 4px rgb(156, 44, 44) inset;
 }
 
@@ -149,15 +148,13 @@ th {
 		box-shadow: none;
 	}
 	25% {
-		box-shadow: 0 0 0 2px rgb(250, 78, 78) inset,
-			0 0 0 4px rgb(156, 44, 44) inset;
+		box-shadow: 0 0 0 2px rgb(250, 78, 78) inset, 0 0 0 4px rgb(156, 44, 44) inset;
 	}
 	50% {
 		box-shadow: none;
 	}
 	75% {
-		box-shadow: 0 0 0 2px rgb(250, 78, 78) inset,
-			0 0 0 4px rgb(156, 44, 44) inset;
+		box-shadow: 0 0 0 2px rgb(250, 78, 78) inset, 0 0 0 4px rgb(156, 44, 44) inset;
 	}
 	to {
 		box-shadow: none;

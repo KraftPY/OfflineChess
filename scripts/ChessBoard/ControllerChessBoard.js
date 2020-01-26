@@ -4,27 +4,23 @@ import { ModelChessBoard } from './ModelChessBoard.js';
 export class ControllerChessBoard {
 	constructor(publisher) {
 		this.arrChessPieces = [];
-		this.view = new ViewChessBoard(
-			this.arrChessPieces,
-			this.clickChessPiece.bind(this),
-			this.clickEmptyCell.bind(this)
-		);
+		this.view = new ViewChessBoard(this.clickChessPiece.bind(this), this.clickEmptyCell.bind(this));
 		this.model = new ModelChessBoard();
 		this.publisher = publisher;
+		// ???????????????????????????????????????????
 		this.tempPieces = { first: null, second: null };
-		this.whoseMove = 'white'; // чей сейчас ход. При старте новой игры первыми всегда ходят белые фигуры
-		this.isChecked = false; // Чек королю
 	}
 
 	newGame() {
-		this.view.renderNewGame();
+		let arrNewPiece = this.view.renderNewGame();
+		this.model.createNewChessPiece(arrNewPiece);
+		this.arrChessPieces = arrNewPiece;
 	}
 
 	loadGame() {}
 
 	clickEmptyCell(ev) {
-		// ToDo: Можно ли проверять класс в Контролере???
-		if (ev.target.tagName == 'TD' && this.tempPieces.first && ev.target.classList.contains('figureMove')) {
+		if (ev.target.tagName == 'TD' && this.tempPieces.first && this.view.checkCssClass(ev.target, 'figure_move')) {
 			let previousPos = this.tempPieces.first.pos;
 			let chessPiece = this.tempPieces.first;
 			this.view.moveToEmptyCell(chessPiece, ev.target);
@@ -36,9 +32,14 @@ export class ControllerChessBoard {
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
-		} else if (ev.target.tagName == 'TD' && this.tempPieces.first && ev.target.classList.contains('figureKill')) {
+
+			// взятие на проходе
+		} else if (ev.target.tagName == 'TD' && this.tempPieces.first && this.view.checkCssClass(ev.target, 'figure_kill')) {
 			let previousPos = { x: this.tempPieces.first.pos.x, y: this.tempPieces.first.pos.y };
-			this.tempPieces.second = this.arrChessPieces.find((piece) => piece.isFirstMove);
+
+			let arg1 = { name: 'pieceName', value: 'pawn' },
+				arg2 = { name: 'isFirstMove', value: true };
+			this.tempPieces.second = this.model.findChessPieces(arg1, arg2);
 			this.view.takingEnemyChessPiece(this.tempPieces, true);
 
 			// Проверка на чек королю
@@ -47,11 +48,11 @@ export class ControllerChessBoard {
 	}
 
 	clickChessPiece(ev) {
-		let chessPiece = this.arrChessPieces.find((piece) => piece.id == ev.target.dataset.id);
+		let chessPiece = this.model.findChessPieces({ name: 'id', value: ev.target.dataset.id });
 		if (
 			this.tempPieces.first &&
-			this.whoseMove != chessPiece.color &&
-			chessPiece.div.classList.contains('figureKill')
+			this.model.whoseMoveNow != chessPiece.color &&
+			this.view.checkCssClass(chessPiece.div, 'figure_kill')
 		) {
 			let previousPos = { x: this.tempPieces.first.pos.x, y: this.tempPieces.first.pos.y };
 			this.tempPieces.second = chessPiece;
@@ -69,10 +70,10 @@ export class ControllerChessBoard {
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
-		} else if (this.whoseMove == chessPiece.color && this.tempPieces.first != chessPiece) {
+		} else if (this.model.whoseMoveNow == chessPiece.color && this.tempPieces.first != chessPiece) {
 			this.tempPieces.first = chessPiece;
 			let moves = this.getMovesPiece(this.tempPieces.first);
-			this.view.clearChessBoard();
+			this.view.clearChessBoard(this.model.arrDomNodesChessPiece);
 			this.view.selectChessPiece(chessPiece);
 			this.view.showMoves(moves);
 
@@ -92,14 +93,16 @@ export class ControllerChessBoard {
 	// --------------------------------------------------- enPassant ------------------------------------------------
 
 	checkPawnFirstMove(chessPiece) {
-		if (!this.isChecked) {
+		if (!this.model.isCheckedNow) {
 			const { pieceName, isFirstMove, pos } = chessPiece;
-			this.arrChessPieces.forEach((piece) => {
-				piece.pieceName == 'pawn' && piece.isFirstMove == true ? (piece.isFirstMove = false) : false;
-			});
+
+			// если у какой-то пешки прошлый ход был первым, то записываем в isFirstMove = false
+			this.model.dropFirstMovePawn();
+
 			// если пешка делает свой первый ход через одну клетку, то записываем ей в isFirstMove = true
 			if (pieceName == 'pawn' && isFirstMove == null && (pos.y == 4 || pos.y == 5)) {
 				chessPiece.isFirstMove = true;
+
 				// если пешка делает свой первый ход на одну клетку или было isFirstMove = true, то записываем ее в isFirstMove = false
 			} else if (pieceName == 'pawn' && (isFirstMove == null || isFirstMove == true)) {
 				chessPiece.isFirstMove = false;
@@ -118,8 +121,9 @@ export class ControllerChessBoard {
 
 	getEnPassantPawn(chessPiece) {
 		const { pieceName, color, pos } = chessPiece;
-		const leftPiece = this.arrChessPieces.find((piece) => piece.pos.x == pos.x - 1 && piece.pos.y == pos.y);
-		const rightPiece = this.arrChessPieces.find((piece) => piece.pos.x == pos.x + 1 && piece.pos.y == pos.y);
+
+		const leftPiece = this.model.findChessPiecesByPos(pos.x - 1, pos.y);
+		const rightPiece = this.model.findChessPiecesByPos(pos.x + 1, pos.y);
 		if (leftPiece && leftPiece.pieceName == pieceName && leftPiece.color != color && leftPiece.isFirstMove) {
 			this.view.showEnPassantMove(leftPiece);
 		} else if (rightPiece && rightPiece.pieceName == pieceName && rightPiece.color != color && rightPiece.isFirstMove) {
@@ -131,7 +135,7 @@ export class ControllerChessBoard {
 
 	kingIsCheck(previousPos) {
 		// фильтруем фигуры которые выбиты с доски
-		const arrPieces = this.arrChessPieces.filter((piece) => !piece.div.classList.contains('figures_out'));
+		const arrPieces = this.model.arrChessPieces.filter((piece) => !this.view.checkCssClass(piece.div, 'figures_out'));
 
 		// находим королей и делим их на король пользователя и король противника
 		const { userKing, enemyKing } = this.getKingsNow();
@@ -144,20 +148,20 @@ export class ControllerChessBoard {
 
 		switch (true) {
 			//	Если до этого не было шаха и после хода король противника попал под шах
-			case !this.isChecked && enemyKing.div.classList.contains('figureKill'):
+			case !this.model.isCheckedNow && this.view.checkCssClass(enemyKing.div, 'figure_kill'):
 				this.view.kingIsBlinking(enemyKing);
-				this.isChecked = true;
+				this.model.changeIsChecked = true;
 				this.endMove(previousPos);
 				break;
 			//	Если до этого не было шаха и после хода король пользователя попал под шах, отменяем ход
-			case !this.isChecked && userKing.div.classList.contains('figureKill'):
+			case !this.model.isCheckedNow && this.view.checkCssClass(userKing.div, 'figure_kill'):
 			//	Если был шах и после хода король пользователя остался под шахом, отменяем ход
-			case this.isChecked && userKing.div.classList.contains('figureKill'):
+			case this.model.isCheckedNow && this.view.checkCssClass(userKing.div, 'figure_kill'):
 				this.moveBack(userKing);
 				break;
 			//	Если был шах и после хода шах пропал
-			case this.isChecked && !userKing.div.classList.contains('figureKill'):
-				this.isChecked = false;
+			case this.model.isCheckedNow && !this.view.checkCssClass(userKing.div, 'figure_kill'):
+				this.model.changeIsChecked = false;
 				this.endMove(previousPos);
 				break;
 
@@ -166,43 +170,43 @@ export class ControllerChessBoard {
 				break;
 		}
 
-		this.view.clearChessBoard();
+		this.view.clearChessBoard(this.model.arrDomNodesChessPiece);
 	}
 
-	// ToDO: можно внутрь другого метода запихнуть???
 	moveBack(userKing) {
 		this.view.kingIsBlinking(userKing);
 		let saveGame = this.model.getSaveGame();
-		this.view.cancelMove(saveGame.arrChessPieces);
+		this.view.cancelMove(saveGame.arrChessPieces, this.model.arrChessPieces);
 		this.tempPieces = { first: null, second: null };
 	}
 
-	// ToDO: можно внутрь другого метода запихнуть???
 	getKingsNow() {
+		let userColor = this.model.whoseMoveNow == 'white' ? 'white' : 'black',
+			enemyColor = this.model.whoseMoveNow == 'white' ? 'black' : 'white';
 		const kings = {
-			userKing: this.arrChessPieces.find((piece) => piece.color == this.whoseMove && piece.pieceName == 'king'),
-			enemyKing: this.arrChessPieces.find((piece) => piece.color != this.whoseMove && piece.pieceName == 'king')
+			userKing: this.model.findChessPieces({ name: 'color', value: userColor }, { name: 'pieceName', value: 'king' }),
+			enemyKing: this.model.findChessPieces({ name: 'color', value: enemyColor }, { name: 'pieceName', value: 'king' })
 		};
 		return kings;
 	}
 
 	endMove(previousPos) {
 		// сохраняем позиции всех фигур после хода и последний ход
-		this.model.saveGameToLocalStorage(this.arrChessPieces, this.tempPieces, previousPos);
+		this.model.saveGameToLocalStorage(this.tempPieces, previousPos);
 
 		// очищаем доску от возможных ходов, а так же обнуляем временные фигуры
-		this.view.clearChessBoard();
+		this.view.clearChessBoard(this.model.arrDomNodesChessPiece);
 		this.tempPieces = { first: null, second: null };
 
 		// передаем ход другому игроку
-		this.whoseMove = this.whoseMove == 'white' ? 'black' : 'white';
+		this.model.changeWhoseMove();
 
 		// Оповещаем что ход сделан
 		this.publisher.publish('moveEnd');
 	}
 
 	pawnPromotion(chessPiece) {
-		if (!this.isChecked && chessPiece.pieceName == 'pawn' && (chessPiece.pos.y == 1 || chessPiece.pos.y == 8)) {
+		if (!this.model.isCheckedNow && chessPiece.pieceName == 'pawn' && (chessPiece.pos.y == 1 || chessPiece.pos.y == 8)) {
 			this.view.renderPawnPromotion(chessPiece).then((pieceName) => {
 				chessPiece.pieceName = pieceName;
 				chessPiece.div.className = `${pieceName}_${chessPiece.color}`;

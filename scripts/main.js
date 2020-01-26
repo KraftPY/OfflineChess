@@ -1,5 +1,3 @@
-import { ControllerStartGame } from './startGame/ControllerStartGame.js';
-import { ControllerPawnPromotion } from './PawnPromotion/ControllerPawnPromotion.js';
 import { PubSub } from './PubSub/PubSub.js';
 import { ControllerChessBoard } from './ChessBoard/ControllerChessBoard.js';
 
@@ -27,27 +25,19 @@ export let historyMove = [];
 export function clearChessBoard(onlyMoves = false) {
 	if (onlyMoves) {
 		[...dom.chessBoard.rows].forEach((row) =>
-			[...row.children].forEach((col) =>
-				col.classList.remove('figureMove', 'figureKill')
-			)
+			[...row.children].forEach((col) => col.classList.remove('figureMove', 'figureKill'))
 		);
 	} else {
 		[...dom.chessBoard.rows].forEach((row) =>
-			[...row.children].forEach((col) =>
-				col.classList.remove('figureMove', 'figureKill')
-			)
+			[...row.children].forEach((col) => col.classList.remove('figureMove', 'figureKill'))
 		);
-		tempFigure.firstSelectedFigure
-			? (tempFigure.firstSelectedFigure.removeClass = 'choosed')
-			: false;
+		tempFigure.firstSelectedFigure ? (tempFigure.firstSelectedFigure.removeClass = 'choosed') : false;
 		dom.mainModalSwap ? true : (tempFigure.firstSelectedFigure = null);
 		tempFigure.secondSelectedFigure = null;
 	}
 }
 
-document.addEventListener('keydown', (ev) =>
-	ev.code == 'Escape' ? clearChessBoard() : false
-);
+document.addEventListener('keydown', (ev) => (ev.code == 'Escape' ? clearChessBoard() : false));
 
 // dom.chessBoard.addEventListener('click', (ev) => {
 // 	// ход в пустую ячейку
@@ -147,12 +137,7 @@ document.addEventListener('keydown', (ev) =>
 // 	}
 // });
 
-export function keepMoveInStory(
-	firstFigure,
-	previousPos,
-	secondFigure = null,
-	swap = false
-) {
+export function keepMoveInStory(firstFigure, previousPos, secondFigure = null, swap = false) {
 	const moveFigure = new MoveFigure(arrFigures, firstFigure.color);
 
 	if (historyMove.length) {
@@ -165,12 +150,8 @@ export function keepMoveInStory(
 }
 
 function inCheck() {
-	const whiteKing = arrFigures.find(
-			(el) => el.color != 'white' && el.constructor.name == 'King'
-		),
-		blackKing = arrFigures.find(
-			(el) => el.color != 'black' && el.constructor.name == 'King'
-		),
+	const whiteKing = arrFigures.find((el) => el.color != 'white' && el.constructor.name == 'King'),
+		blackKing = arrFigures.find((el) => el.color != 'black' && el.constructor.name == 'King'),
 		checkKing = { status: false, king: null };
 
 	clearChessBoard(true);
@@ -245,20 +226,14 @@ class MoveFigure {
 			};
 
 		if (swap) {
-			this.li.innerHTML = `${firstFigure.constructor.name} (${
-				firstFigure.color
-			}) - ${symbol[previousPos.x - 1]}${
+			this.li.innerHTML = `${firstFigure.constructor.name} (${firstFigure.color}) - ${symbol[previousPos.x - 1]}${
 				number[previousPos.y - 1]
 			} swap to <br>${secondFigure.constructor.name} (${secondFigure.color})`;
 		} else {
-			this.li.innerHTML = `${firstFigure.constructor.name} (${
-				firstFigure.color
-			}) - ${symbol[previousPos.x - 1]}${number[previousPos.y - 1]} move to ${
-				symbol[firstFigure.pos.x - 1]
-			}${number[firstFigure.pos.y - 1]}`;
-			secondFigure
-				? (this.li.innerHTML += `<br>(killed ${secondFigure.constructor.name} (${secondFigure.color}))`)
-				: false;
+			this.li.innerHTML = `${firstFigure.constructor.name} (${firstFigure.color}) - ${symbol[previousPos.x - 1]}${
+				number[previousPos.y - 1]
+			} move to ${symbol[firstFigure.pos.x - 1]}${number[firstFigure.pos.y - 1]}`;
+			secondFigure ? (this.li.innerHTML += `<br>(killed ${secondFigure.constructor.name} (${secondFigure.color}))`) : false;
 		}
 		dom.listStory.append(this.li);
 		dom.scrollList.scrollTop = dom.scrollList.scrollHeight;
@@ -284,17 +259,12 @@ class MoveFigure {
 				figure: el.objFigure.constructor.name,
 				color: el.objFigure.color,
 				pos: el.pos,
-				out: el.objFigure.figure.classList.contains('figures_out')
-					? true
-					: false
+				out: el.objFigure.figure.classList.contains('figures_out') ? true : false
 			};
 			return figureData;
 		});
 
-		localStorage.setItem(
-			'history',
-			JSON.stringify({ arrFigures: arr, lastMove: saveMove })
-		);
+		localStorage.setItem('history', JSON.stringify({ arrFigures: arr, lastMove: saveMove }));
 	}
 }
 
@@ -302,6 +272,5 @@ class MoveFigure {
 
 const publisher = new PubSub();
 // const newGame = new ControllerStartGame();
-// const pawnPromotion = new ControllerPawnPromotion(publisher, arrFigures);
 const chessBoard = new ControllerChessBoard(publisher);
 chessBoard.newGame();
