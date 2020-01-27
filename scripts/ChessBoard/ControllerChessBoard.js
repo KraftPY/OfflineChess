@@ -27,14 +27,20 @@ export class ControllerChessBoard {
 
 			// если пешка дошла до конца, то запускаем "обмен пешки"
 			this.pawnPromotion(chessPiece);
-			// проверка пешки на первый ход
+
+			// проверка пешки на первый ход и короля с ладьёй
 			this.checkPawnFirstMove(chessPiece);
+			this.checkKingRookFirstMove(chessPiece);
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
 
 			// взятие на проходе
-		} else if (ev.target.tagName == 'TD' && this.tempPieces.first && this.view.checkCssClass(ev.target, 'figure_kill')) {
+		} else if (
+			ev.target.tagName == 'TD' &&
+			this.tempPieces.first &&
+			this.view.checkCssClass(ev.target, 'figure_kill')
+		) {
 			let previousPos = { x: this.tempPieces.first.pos.x, y: this.tempPieces.first.pos.y };
 
 			let arg1 = { name: 'pieceName', value: 'pawn' },
@@ -63,13 +69,14 @@ export class ControllerChessBoard {
 
 			// проверка пешки на первый ход и короля с ладьёй
 			this.checkPawnFirstMove(chessPiece);
-			this.checkKingRookFirstMove(chessPiece);
+			this.checkKingRookFirstMove(this.tempPieces.first);
 
 			// проверка на "Рокировку"
-			this.castling(chessPiece.color);
+			this.checkCastling(chessPiece.color);
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
+			// переключение по фигурам одного цвета
 		} else if (this.model.whoseMoveNow == chessPiece.color && this.tempPieces.first != chessPiece) {
 			this.tempPieces.first = chessPiece;
 			let moves = this.getMovesPiece(this.tempPieces.first);
@@ -79,14 +86,33 @@ export class ControllerChessBoard {
 
 			// проверка на "взятие на проходе"
 			this.enPassant(chessPiece);
+
+			// проверка на рокировку
+			this.checkCastling(chessPiece);
 		}
 	}
 
 	// --------------------------------------------------- Castling -------------------------------------------------
-	castling(color) {}
+	checkCastling(chessPiece) {
+		if (chessPiece.pieceName == 'king' && !chessPiece.isFirstMove && chessPiece.color == 'black') {
+			const rooks = {
+				leftRook: this.model.findChessPieces({ name: 'id', value: 'a8' }, { name: 'isFirstMove', value: null }),
+				rightRook: this.model.findChessPieces({ name: 'id', value: 'h8' }, { name: 'isFirstMove', value: null })
+			};
+			this.castling(chessPiece, rooks);
+		} else if (chessPiece.pieceName == 'king' && !chessPiece.isFirstMove && chessPiece.color == 'white') {
+			const rooks = {
+				leftRook: this.model.findChessPieces({ name: 'id', value: 'a1' }, { name: 'isFirstMove', value: null }),
+				rightRook: this.model.findChessPieces({ name: 'id', value: 'h1' }, { name: 'isFirstMove', value: null })
+			};
+			this.castling(chessPiece, rooks);
+		}
+	}
+
+	castling(king, rooks) {}
 
 	checkKingRookFirstMove(chessPiece) {
-		if (chessPiece.pieceName == 'king' || chessPiece.pieceName == 'rook' || chessPiece.isFirstMove == null) {
+		if ((chessPiece.pieceName == 'king' || chessPiece.pieceName == 'rook') && chessPiece.isFirstMove == null) {
 			chessPiece.isFirstMove = true;
 		}
 	}
@@ -169,7 +195,6 @@ export class ControllerChessBoard {
 				this.endMove(previousPos);
 				break;
 		}
-
 		this.view.clearChessBoard(this.model.arrDomNodesChessPiece);
 	}
 
@@ -206,7 +231,11 @@ export class ControllerChessBoard {
 	}
 
 	pawnPromotion(chessPiece) {
-		if (!this.model.isCheckedNow && chessPiece.pieceName == 'pawn' && (chessPiece.pos.y == 1 || chessPiece.pos.y == 8)) {
+		if (
+			!this.model.isCheckedNow &&
+			chessPiece.pieceName == 'pawn' &&
+			(chessPiece.pos.y == 1 || chessPiece.pos.y == 8)
+		) {
 			this.view.renderPawnPromotion(chessPiece).then((pieceName) => {
 				chessPiece.pieceName = pieceName;
 				chessPiece.div.className = `${pieceName}_${chessPiece.color}`;

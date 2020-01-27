@@ -96,6 +96,7 @@ export class ViewChessBoard {
 				this.chessBoardCells[y][x].append(piece.div);
 				// ToDo: model or view??????
 				piece.pos = savePiece.pos;
+				piece.isFirstMove = savePiece.isFirstMove;
 			}
 		});
 	}

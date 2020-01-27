@@ -9,12 +9,6 @@ export class ModelChessBoard {
 		this.arrChessPieces = arrNewPiece;
 	}
 
-	get arrChessPiece() {
-		// this.arrChessPieces.find((piece) => piece.isFirstMove);
-		// this.arrChessPieces.find((piece) => piece.id == ev.target.dataset.id);
-		return this.arrChessPieces;
-	}
-
 	findChessPieces(...args) {
 		let chessPieces = this.arrChessPieces.map((piece) => piece);
 		args.forEach((arg) => {
@@ -37,6 +31,7 @@ export class ModelChessBoard {
 		});
 	}
 
+	// ToDo: в Controller нужно перезаписывать значение или можно напрямую проверять пример: this.model.whoseMove == 'white'
 	get whoseMoveNow() {
 		return this.whoseMove;
 	}
@@ -49,6 +44,7 @@ export class ModelChessBoard {
 		return this.isChecked;
 	}
 
+	// ToDo: можно ли записывать напрямую или только через метод Model
 	set changeIsChecked(value) {
 		this.isChecked = value;
 	}
