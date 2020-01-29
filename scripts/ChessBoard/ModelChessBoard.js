@@ -16,8 +16,10 @@ export class ModelChessBoard {
 		});
 		if (chessPieces.length == 1) {
 			return chessPieces[0];
-		} else {
+		} else if (chessPieces.length > 1) {
 			return chessPieces;
+		} else {
+			return null;
 		}
 	}
 

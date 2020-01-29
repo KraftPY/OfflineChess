@@ -96,20 +96,43 @@ export class ControllerChessBoard {
 	checkCastling(chessPiece) {
 		if (chessPiece.pieceName == 'king' && !chessPiece.isFirstMove && chessPiece.color == 'black') {
 			const rooks = {
-				leftRook: this.model.findChessPieces({ name: 'id', value: 'a8' }, { name: 'isFirstMove', value: null }),
-				rightRook: this.model.findChessPieces({ name: 'id', value: 'h8' }, { name: 'isFirstMove', value: null })
+				leftRook: this.model.findChessPieces({ name: 'id', value: 'a8' }),
+				rightRook: this.model.findChessPieces({ name: 'id', value: 'h8' })
 			};
 			this.castling(chessPiece, rooks);
 		} else if (chessPiece.pieceName == 'king' && !chessPiece.isFirstMove && chessPiece.color == 'white') {
 			const rooks = {
-				leftRook: this.model.findChessPieces({ name: 'id', value: 'a1' }, { name: 'isFirstMove', value: null }),
-				rightRook: this.model.findChessPieces({ name: 'id', value: 'h1' }, { name: 'isFirstMove', value: null })
+				leftRook: this.model.findChessPieces({ name: 'id', value: 'a1' }),
+				rightRook: this.model.findChessPieces({ name: 'id', value: 'h1' })
 			};
 			this.castling(chessPiece, rooks);
 		}
 	}
 
-	castling(king, rooks) {}
+	castling(king, { leftRook, rightRook }) {
+		switch (true) {
+			case king.color == 'white' && !leftRook.isFirstMove && !rightRook.isFirstMove:
+				console.log(king, leftRook, rightRook);
+				break;
+			case king.color == 'white' && !leftRook.isFirstMove && rightRook.isFirstMove:
+				console.log(king, leftRook);
+				break;
+			case king.color == 'white' && leftRook.isFirstMove && !rightRook.isFirstMove:
+				console.log(king, rightRook);
+				break;
+			case king.color == 'black' && !leftRook.isFirstMove && !rightRook.isFirstMove:
+				console.log(king, leftRook, rightRook);
+				break;
+			case king.color == 'black' && !leftRook.isFirstMove && rightRook.isFirstMove:
+				console.log(king, leftRook);
+				break;
+			case king.color == 'black' && leftRook.isFirstMove && !rightRook.isFirstMove:
+				console.log(king, rightRook);
+				break;
+			default:
+				break;
+		}
+	}
 
 	checkKingRookFirstMove(chessPiece) {
 		if ((chessPiece.pieceName == 'king' || chessPiece.pieceName == 'rook') && chessPiece.isFirstMove == null) {
