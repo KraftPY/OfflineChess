@@ -155,6 +155,24 @@ export class ViewChessBoard {
 		});
 	}
 
+	renderCastling(king, rook) {
+		if (rook.id == 'a1' || rook.id == 'a8') {
+			this.chessBoardCells[rook.pos.y][rook.pos.x + 3].append(rook.div);
+			rook.pos.x = rook.pos.x + 3;
+			this.chessBoardCells[king.pos.y][king.pos.x - 2].append(king.div);
+			king.pos.x = king.pos.x - 2;
+		} else if (rook.id == 'h1' || rook.id == 'h8') {
+			this.chessBoardCells[rook.pos.y][rook.pos.x - 2].append(rook.div);
+			rook.pos.x = rook.pos.x - 2;
+			this.chessBoardCells[king.pos.y][king.pos.x + 2].append(king.div);
+			king.pos.x = king.pos.x + 2;
+		}
+	}
+
+	checkCellUnderAttack(i, j) {
+		return this.chessBoardCells[i][j].classList.contains('figure_move');
+	}
+
 	moveToEmptyCell(chessPiece, emptyCell) {
 		emptyCell.append(chessPiece.div);
 		chessPiece.pos = { x: emptyCell.cellIndex, y: emptyCell.parentNode.rowIndex };
@@ -189,14 +207,16 @@ export class ViewChessBoard {
 		}
 	}
 
-	clearChessBoard(arrDomNodesChessPiece) {
+	clearChessBoard(arrDomNodesChessPiece, notChoosed = false) {
 		this.chessBoardCells.forEach((row) => {
 			row.forEach((cell) => {
 				cell.classList.remove('figure_move');
 				cell.classList.remove('figure_kill');
 			});
 		});
-		arrDomNodesChessPiece.forEach((piece) => piece.classList.remove('choosed', 'figure_kill'));
+		notChoosed
+			? arrDomNodesChessPiece.forEach((piece) => piece.classList.remove('figure_kill'))
+			: arrDomNodesChessPiece.forEach((piece) => piece.classList.remove('choosed', 'figure_kill'));
 	}
 
 	selectChessPiece(piece) {
@@ -211,5 +231,9 @@ export class ViewChessBoard {
 
 	checkCssClass(element, className) {
 		return element.classList.contains(className);
+	}
+
+	addCssClass(element, className) {
+		element.classList.add(className);
 	}
 }

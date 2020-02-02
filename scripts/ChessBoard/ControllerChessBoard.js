@@ -71,67 +71,106 @@ export class ControllerChessBoard {
 			this.checkPawnFirstMove(chessPiece);
 			this.checkKingRookFirstMove(this.tempPieces.first);
 
-			// проверка на "Рокировку"
-			this.checkCastling(chessPiece.color);
+			// Проверка на чек королю
+			this.kingIsCheck(previousPos);
+
+			// выбор ладьи для рокировки
+		} else if (this.tempPieces.first != chessPiece && this.view.checkCssClass(chessPiece.div, 'choosed')) {
+			let previousPos = { x: this.tempPieces.first.pos.x, y: this.tempPieces.first.pos.y };
+			this.tempPieces.second = chessPiece;
+			this.view.renderCastling(this.tempPieces.first, this.tempPieces.second);
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
+
 			// переключение по фигурам одного цвета
 		} else if (this.model.whoseMoveNow == chessPiece.color && this.tempPieces.first != chessPiece) {
 			this.tempPieces.first = chessPiece;
 			let moves = this.getMovesPiece(this.tempPieces.first);
 			this.view.clearChessBoard(this.model.arrDomNodesChessPiece);
 			this.view.selectChessPiece(chessPiece);
+
+			// проверка на рокировку
+			this.checkCastling(chessPiece);
+
 			this.view.showMoves(moves);
 
 			// проверка на "взятие на проходе"
 			this.enPassant(chessPiece);
-
-			// проверка на рокировку
-			this.checkCastling(chessPiece);
 		}
 	}
 
 	// --------------------------------------------------- Castling -------------------------------------------------
 	checkCastling(chessPiece) {
-		if (chessPiece.pieceName == 'king' && !chessPiece.isFirstMove && chessPiece.color == 'black') {
+		if (
+			chessPiece.pieceName == 'king' &&
+			!chessPiece.isFirstMove &&
+			chessPiece.color == 'black' &&
+			!this.model.isChecked
+		) {
 			const rooks = {
-				leftRook: this.model.findChessPieces({ name: 'id', value: 'a8' }),
-				rightRook: this.model.findChessPieces({ name: 'id', value: 'h8' })
+				leftRook: this.model.findChessPieces({ name: 'id', value: 'a8' }, { name: 'isFirstMove', value: null }),
+				rightRook: this.model.findChessPieces({ name: 'id', value: 'h8' }, { name: 'isFirstMove', value: null })
 			};
-			this.castling(chessPiece, rooks);
-		} else if (chessPiece.pieceName == 'king' && !chessPiece.isFirstMove && chessPiece.color == 'white') {
+			rooks.leftRook || rooks.rightRook ? this.choosePiecesForCastling(chessPiece, rooks) : false;
+		} else if (
+			chessPiece.pieceName == 'king' &&
+			!chessPiece.isFirstMove &&
+			chessPiece.color == 'white' &&
+			!this.model.isChecked
+		) {
 			const rooks = {
-				leftRook: this.model.findChessPieces({ name: 'id', value: 'a1' }),
-				rightRook: this.model.findChessPieces({ name: 'id', value: 'h1' })
+				leftRook: this.model.findChessPieces({ name: 'id', value: 'a1' }, { name: 'isFirstMove', value: null }),
+				rightRook: this.model.findChessPieces({ name: 'id', value: 'h1' }, { name: 'isFirstMove', value: null })
 			};
-			this.castling(chessPiece, rooks);
+			rooks.leftRook || rooks.rightRook ? this.choosePiecesForCastling(chessPiece, rooks) : false;
 		}
 	}
 
-	castling(king, { leftRook, rightRook }) {
-		switch (true) {
-			case king.color == 'white' && !leftRook.isFirstMove && !rightRook.isFirstMove:
-				console.log(king, leftRook, rightRook);
-				break;
-			case king.color == 'white' && !leftRook.isFirstMove && rightRook.isFirstMove:
-				console.log(king, leftRook);
-				break;
-			case king.color == 'white' && leftRook.isFirstMove && !rightRook.isFirstMove:
-				console.log(king, rightRook);
-				break;
-			case king.color == 'black' && !leftRook.isFirstMove && !rightRook.isFirstMove:
-				console.log(king, leftRook, rightRook);
-				break;
-			case king.color == 'black' && !leftRook.isFirstMove && rightRook.isFirstMove:
-				console.log(king, leftRook);
-				break;
-			case king.color == 'black' && leftRook.isFirstMove && !rightRook.isFirstMove:
-				console.log(king, rightRook);
-				break;
-			default:
-				break;
+	choosePiecesForCastling(king, { leftRook, rightRook }) {
+		if (
+			leftRook != null &&
+			this.view.checkPieceInCell(king.pos.y, king.pos.x - 1) &&
+			this.view.checkPieceInCell(king.pos.y, king.pos.x - 2) &&
+			this.view.checkPieceInCell(king.pos.y, king.pos.x - 3)
+		) {
+			this.checkCellsForAttack(king, leftRook);
 		}
+
+		if (
+			rightRook != null &&
+			this.view.checkPieceInCell(king.pos.y, king.pos.x + 1) &&
+			this.view.checkPieceInCell(king.pos.y, king.pos.x + 2)
+		) {
+			this.checkCellsForAttack(king, rightRook);
+		}
+	}
+
+	checkCellsForAttack(king, rook) {
+		// фильтруем все фигуры противника, которые выбиты с доски
+		const arrPieces = this.model.arrChessPieces.filter(
+			(piece) => !this.view.checkCssClass(piece.div, 'figures_out') && piece.color != king.color
+		);
+
+		// смотрим все возможные ходы всех фигур на шахматной доске
+		arrPieces.forEach((piece) => {
+			let moves = this.getMovesPiece(piece);
+			this.view.showMoves(moves);
+		});
+		if (
+			rook.pos.x == 8 &&
+			!this.view.checkCellUnderAttack(king.pos.y, king.pos.x + 1) &&
+			!this.view.checkCellUnderAttack(king.pos.y, king.pos.x + 2)
+		) {
+			this.view.addCssClass(rook.div, 'choosed');
+		} else if (
+			rook.pos.x == 1 &&
+			!this.view.checkCellUnderAttack(king.pos.y, king.pos.x - 1) &&
+			!this.view.checkCellUnderAttack(king.pos.y, king.pos.x - 2)
+		) {
+			this.view.addCssClass(rook.div, 'choosed');
+		}
+		this.view.clearChessBoard(this.model.arrDomNodesChessPiece, true);
 	}
 
 	checkKingRookFirstMove(chessPiece) {
@@ -139,6 +178,7 @@ export class ControllerChessBoard {
 			chessPiece.isFirstMove = true;
 		}
 	}
+
 	// --------------------------------------------------- enPassant ------------------------------------------------
 
 	checkPawnFirstMove(chessPiece) {

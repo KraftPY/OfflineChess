@@ -33,7 +33,6 @@ export class ModelChessBoard {
 		});
 	}
 
-	// ToDo: в Controller нужно перезаписывать значение или можно напрямую проверять пример: this.model.whoseMove == 'white'
 	get whoseMoveNow() {
 		return this.whoseMove;
 	}
@@ -46,7 +45,6 @@ export class ModelChessBoard {
 		return this.isChecked;
 	}
 
-	// ToDo: можно ли записывать напрямую или только через метод Model
 	set changeIsChecked(value) {
 		this.isChecked = value;
 	}
