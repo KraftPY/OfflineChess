@@ -21,7 +21,8 @@ export class ViewChessBoard {
 				pos: { x: j, y: i },
 				pieceName: pieceName,
 				color: color,
-				isFirstMove: null
+				isFirstMove: null,
+				isPromotion: false
 			};
 		piece.div.setAttribute('data-id', piece.id);
 		piece.div.classList.add(`${pieceName}_${color}`);
@@ -73,7 +74,37 @@ export class ViewChessBoard {
 		return arrNewPiece;
 	}
 
-	renderSaveGame(saveGame) {}
+	noLoadGame() {
+		alert('Нет сохраненной игры!');
+	}
+
+	renderSaveGame(saveGame, arrChessPieces = null) {
+		// удаляем все фигуры с доски и их слушатели
+		if (arrChessPieces != null) {
+			arrChessPieces.forEach((el) => {
+				el.div.removeEventListener('click', this.clickChessPiece);
+				el.div.remove();
+			});
+			// если загрузка сохраненой игры
+		} else {
+			// Listener на пустые ячейки шахматной доски
+			this.dom.chessBoard.addEventListener('click', this.clickEmptyCell);
+		}
+
+		return saveGame.arrChessPieces.map((el) => {
+			el.div = document.createElement('div');
+			el.div.classList.add(`${el.pieceName}_${el.color}`);
+			el.div.setAttribute('data-id', el.id);
+			if (el.pos.x == null) {
+				el.color == 'white' ? this.dom.whiteOut.append(el.div) : this.dom.blackOut.append(el.div);
+				el.div.classList.add('figures_out');
+			} else {
+				el.div.addEventListener('click', this.clickChessPiece);
+				this.chessBoardCells[el.pos.y][el.pos.x].append(el.div);
+			}
+			return el;
+		});
+	}
 
 	showEnPassantMove(pawn) {
 		const { color, pos } = pawn;
@@ -94,7 +125,6 @@ export class ViewChessBoard {
 					piece.div.addEventListener('click', this.clickChessPiece);
 				}
 				this.chessBoardCells[y][x].append(piece.div);
-				// ToDo: model or view??????
 				piece.pos = savePiece.pos;
 				piece.isFirstMove = savePiece.isFirstMove;
 			}
@@ -182,7 +212,6 @@ export class ViewChessBoard {
 		let { x, y } = second.pos;
 
 		// убираем выбитую фигуру с доски, обнуляем ее координаты и удаляем слушатель с нее
-		// ?????????????????????????????????????????????
 		second.color == 'white' ? this.dom.whiteOut.append(second.div) : this.dom.blackOut.append(second.div);
 		second.pos.x = null;
 		second.pos.y = null;

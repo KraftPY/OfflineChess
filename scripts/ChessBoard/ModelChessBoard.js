@@ -3,10 +3,12 @@ export class ModelChessBoard {
 		this.arrChessPieces = [];
 		this.whoseMove = 'white'; // чей сейчас ход. При старте новой игры первыми всегда ходят белые фигуры
 		this.isChecked = false; // Чек королю
+		this.numMove = null;
 	}
 
-	createNewChessPiece(arrNewPiece) {
+	createNewChessPiece(arrNewPiece, newGame = false) {
 		this.arrChessPieces = arrNewPiece;
+		newGame ? localStorage.setItem('saveGame', JSON.stringify([])) : false;
 	}
 
 	findChessPieces(...args) {
@@ -55,16 +57,38 @@ export class ModelChessBoard {
 		});
 	}
 
+	savePawnPromotion(chessPiece, pieceName) {
+		chessPiece.pieceName = pieceName;
+		chessPiece.div.className = `${pieceName}_${chessPiece.color}`;
+		chessPiece.isPromotion = true;
+	}
+
 	saveGameToLocalStorage(tempPieces, previousPos) {
 		const save = {
 			arrChessPieces: this.arrChessPieces,
 			tempPieces: tempPieces,
 			previousPos: previousPos
 		};
-		localStorage.setItem('saveGame', JSON.stringify(save));
+		let arrHistoryMove = JSON.parse(localStorage.getItem('saveGame'));
+		arrHistoryMove.push(JSON.stringify(save));
+		localStorage.setItem('saveGame', JSON.stringify(arrHistoryMove));
 	}
 
-	getSaveGame() {
-		return JSON.parse(localStorage.getItem('saveGame'));
+	getSaveGame(num = null) {
+		const saveGame = JSON.parse(localStorage.getItem('saveGame'));
+		if (saveGame != null && saveGame.length != 0) {
+			const saveMove = num != null ? JSON.parse(saveGame[num]) : JSON.parse(saveGame[saveGame.length - 1]);
+			return saveMove;
+		} else {
+			return false;
+		}
+	}
+
+	set changeNumMove(value) {
+		this.numMove = value;
+	}
+
+	get getNumMove() {
+		return this.numMove;
 	}
 }

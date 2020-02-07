@@ -1,43 +1,20 @@
 import { ViewStartGame } from './ViewStartGame.js';
 import { ModelStartGame } from './ModelStartGame.js';
-import * as allClassesFigures from '../chessBoard/ChessFigure.js';
-import { arrFigures, keepMoveInStory } from '../main.js';
 
 export class ControllerStartGame {
-	constructor() {
+	constructor(publisher) {
 		this.model = new ModelStartGame();
-		this.view = new ViewStartGame();
-		this.arrFigures = arrFigures;
-		this.keepMoveInStory = keepMoveInStory;
-		this.allClassesFigures = allClassesFigures;
-		this.view.creatModalWnd(this.newGame.bind(this), this.loadGame.bind(this));
+		this.view = new ViewStartGame(this.newGame.bind(this), this.loadGame.bind(this));
+		this.publisher = publisher;
 	}
 
 	newGame() {
-		this.view.newGame(this.allClassesFigures);
+		this.publisher.publish('startNewGame');
 		this.view.closeModalWnd();
 	}
 
 	loadGame() {
-		const saveGame = this.model.getSaveGameFromLS();
-		const isSaveGame = this.view.loadGame(this.allClassesFigures, saveGame);
-		if (isSaveGame) {
-			this.view.closeModalWnd();
-			const {
-				firstFigure,
-				previousPos,
-				secondFigure,
-				swap
-			} = this.model.getLastMoveFromSaveGame(this.arrFigures);
-
-			// Todo: Реализовать через PubSub
-			this.keepMoveInStory(firstFigure, previousPos, secondFigure, swap);
-		} else {
-			this.newGame();
-		}
-	}
-
-	closeModalWnd() {
-		this.view.creatModalWnd();
+		this.publisher.publish('startLoadGame');
+		this.view.closeModalWnd();
 	}
 }

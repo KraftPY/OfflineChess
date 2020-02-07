@@ -3,21 +3,45 @@ import { ModelChessBoard } from './ModelChessBoard.js';
 
 export class ControllerChessBoard {
 	constructor(publisher) {
-		this.arrChessPieces = [];
 		this.view = new ViewChessBoard(this.clickChessPiece.bind(this), this.clickEmptyCell.bind(this));
 		this.model = new ModelChessBoard();
 		this.publisher = publisher;
-		// ???????????????????????????????????????????
+		this.publisher.subscribe('moveBack', this.moveBackToHistory.bind(this));
+		this.publisher.subscribe('startNewGame', this.newGame.bind(this));
+		this.publisher.subscribe('startLoadGame', this.loadGame.bind(this));
 		this.tempPieces = { first: null, second: null };
 	}
 
 	newGame() {
 		let arrNewPiece = this.view.renderNewGame();
-		this.model.createNewChessPiece(arrNewPiece);
-		this.arrChessPieces = arrNewPiece;
+		this.model.createNewChessPiece(arrNewPiece, true);
 	}
 
-	loadGame() {}
+	loadGame() {
+		const lastMove = this.model.getSaveGame();
+		if (lastMove) {
+			const arrLoadPiece = this.view.renderSaveGame(lastMove);
+			this.model.createNewChessPiece(arrLoadPiece);
+			this.publisher.publish('loadGame');
+		} else {
+			this.view.noLoadGame();
+			this.newGame();
+		}
+	}
+
+	moveBackToHistory(numMove) {
+		this.model.changeNumMove = numMove;
+		const saveMove = this.model.getSaveGame(numMove);
+		const chessPiece = saveMove.tempPieces.first;
+		chessPiece.color == this.model.whoseMoveNow ? this.model.changeWhoseMove() : false;
+		const newArrChess = this.view.renderSaveGame(saveMove, this.model.arrChessPieces);
+		this.model.createNewChessPiece(newArrChess);
+		this.view.clearChessBoard(this.model.arrDomNodesChessPiece);
+
+		// check pawn promotion
+		const piece = this.model.findChessPieces({ name: 'id', value: chessPiece.id });
+		this.pawnPromotion(piece);
+	}
 
 	clickEmptyCell(ev) {
 		if (ev.target.tagName == 'TD' && this.tempPieces.first && this.view.checkCssClass(ev.target, 'figure_move')) {
@@ -25,12 +49,12 @@ export class ControllerChessBoard {
 			let chessPiece = this.tempPieces.first;
 			this.view.moveToEmptyCell(chessPiece, ev.target);
 
-			// если пешка дошла до конца, то запускаем "обмен пешки"
-			this.pawnPromotion(chessPiece);
-
 			// проверка пешки на первый ход и короля с ладьёй
 			this.checkPawnFirstMove(chessPiece);
 			this.checkKingRookFirstMove(chessPiece);
+
+			// если пешка дошла до конца, то запускаем "обмен пешки"
+			this.pawnPromotion(chessPiece);
 
 			// Проверка на чек королю
 			this.kingIsCheck(previousPos);
@@ -55,6 +79,7 @@ export class ControllerChessBoard {
 
 	clickChessPiece(ev) {
 		let chessPiece = this.model.findChessPieces({ name: 'id', value: ev.target.dataset.id });
+
 		if (
 			this.tempPieces.first &&
 			this.model.whoseMoveNow != chessPiece.color &&
@@ -236,8 +261,10 @@ export class ControllerChessBoard {
 		});
 
 		switch (true) {
-			//	Если до этого не было шаха и после хода король противника попал под шах
-			case !this.model.isCheckedNow && this.view.checkCssClass(enemyKing.div, 'figure_kill'):
+			//	Если до этого не было шаха и после хода король противника попал под шах и НЕ попал под шах король пользователя
+			case !this.model.isCheckedNow &&
+				this.view.checkCssClass(enemyKing.div, 'figure_kill') &&
+				!this.view.checkCssClass(userKing.div, 'figure_kill'):
 				this.view.kingIsBlinking(enemyKing);
 				this.model.changeIsChecked = true;
 				this.endMove(previousPos);
@@ -263,7 +290,11 @@ export class ControllerChessBoard {
 
 	moveBack(userKing) {
 		this.view.kingIsBlinking(userKing);
-		let saveGame = this.model.getSaveGame();
+
+		// если в истории ходов выбран ход когда шах королю, то мы возвращаемся к ходу который выбран (если текущий ход не убрал шах),
+		// если нет - тогда берем последний ход с истории
+		let saveGame =
+			this.model.getNumMove == null ? this.model.getSaveGame() : this.model.getSaveGame(this.model.getNumMove);
 		this.view.cancelMove(saveGame.arrChessPieces, this.model.arrChessPieces);
 		this.tempPieces = { first: null, second: null };
 	}
@@ -289,6 +320,9 @@ export class ControllerChessBoard {
 		// передаем ход другому игроку
 		this.model.changeWhoseMove();
 
+		// обнуляем выбраного хода в истории
+		this.model.changeNumMove = null;
+
 		// Оповещаем что ход сделан
 		this.publisher.publish('moveEnd');
 	}
@@ -300,8 +334,11 @@ export class ControllerChessBoard {
 			(chessPiece.pos.y == 1 || chessPiece.pos.y == 8)
 		) {
 			this.view.renderPawnPromotion(chessPiece).then((pieceName) => {
-				chessPiece.pieceName = pieceName;
-				chessPiece.div.className = `${pieceName}_${chessPiece.color}`;
+				this.model.savePawnPromotion(chessPiece, pieceName);
+				this.model.saveGameToLocalStorage({ first: chessPiece, second: null }, chessPiece.pos);
+
+				// Оповещаем что ход сделан
+				this.publisher.publish('moveEnd');
 			});
 		}
 	}
